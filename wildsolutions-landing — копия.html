@@ -1,0 +1,2563 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WildSolutions — Финансовый контроль для маркетплейсов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep:    #06060F;
+    --bg-card:    #0D0D1E;
+    --bg-glass:   rgba(124,58,237,0.07);
+    --purple-900: #3B1A8C;
+    --purple-700: #5E28CC;
+    --purple-500: #7C3AED;
+    --purple-400: #9B5EF5;
+    --purple-300: #B89AF8;
+    --amber:      #F59E0B;
+    --amber-glow: rgba(245,158,11,0.15);
+    --green:      #10B981;
+    --red:        #EF4444;
+    --text-main:  #F0EEFF;
+    --text-muted: #8B82B0;
+    --border:     rgba(124,58,237,0.2);
+    --border-hot: rgba(245,158,11,0.4);
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body:    'Manrope', sans-serif;
+    --font-mono:    'JetBrains Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-main);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* ─── NOISE TEXTURE ─────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── NAV ────────────────────────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 60px;
+    background: rgba(6,6,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: var(--text-main);
+  }
+  .nav-logo span { color: var(--purple-400); }
+
+  .nav-links {
+    display: flex; gap: 36px; list-style: none;
+  }
+  .nav-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--text-main); }
+
+  .nav-cta {
+    background: var(--purple-500);
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: background .2s, transform .15s;
+  }
+  .nav-cta:hover { background: var(--purple-400); transform: scale(1.04); }
+
+  /* ─── HERO ───────────────────────────────────────── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 140px 40px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124,58,237,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 80% 80%, rgba(245,158,11,0.07) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .hero-track {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--purple-500), var(--amber), var(--purple-500), transparent);
+    animation: trackPulse 3s ease-in-out infinite;
+  }
+
+  @keyframes trackPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--amber-glow);
+    border: 1px solid var(--border-hot);
+    padding: 6px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 28px;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    animation: fadeIn .6s ease both;
+  }
+
+  .hero-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--amber);
+    border-radius: 50%;
+    animation: blink 1.4s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(64px, 10vw, 140px);
+    line-height: 0.92;
+    letter-spacing: 4px;
+    margin-bottom: 20px;
+    animation: slideUp .7s ease both .1s;
+  }
+
+  .hero-title .line-accent { color: var(--purple-400); }
+  .hero-title .line-amber  { color: var(--amber); }
+
+  .hero-subtitle {
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--text-muted);
+    max-width: 600px;
+    margin: 0 auto 48px;
+    animation: slideUp .7s ease both .25s;
+  }
+
+  .hero-subtitle strong { color: var(--text-main); font-weight: 600; }
+
+  .hero-actions {
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    animation: slideUp .7s ease both .4s;
+    margin-bottom: 64px;
+  }
+
+  .btn-primary {
+    background: var(--purple-500);
+    color: #fff;
+    border: none;
+    padding: 16px 36px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.12));
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .btn-primary:hover { background: var(--purple-400); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(124,58,237,0.4); }
+  .btn-primary:hover::before { opacity: 1; }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    padding: 16px 36px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    transition: all .2s;
+  }
+  .btn-outline:hover { border-color: var(--purple-400); color: var(--purple-300); }
+
+  /* ─── TELEMETRY BAR ──────────────────────────────── */
+  .telemetry-bar {
+    display: flex; gap: 0;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    width: 100%; max-width: 900px;
+    margin: 0 auto;
+    animation: slideUp .7s ease both .55s;
+    overflow: hidden;
+  }
+
+  .tele-item {
+    flex: 1;
+    padding: 20px 24px;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+  .tele-item:last-child { border-right: none; }
+
+  .tele-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-family: var(--font-mono);
+  }
+
+  .tele-value {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text-main);
+  }
+  .tele-value.up   { color: var(--green); }
+  .tele-value.down { color: var(--red); }
+  .tele-value.amber { color: var(--amber); }
+
+  .tele-delta {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    margin-top: 2px;
+  }
+  .tele-delta .pos { color: var(--green); }
+  .tele-delta .neg { color: var(--red); }
+
+  /* Live indicator */
+  .live-dot {
+    position: absolute; top: 16px; right: 16px;
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: blink 1.2s infinite;
+  }
+
+  /* ─── SECTION COMMON ─────────────────────────────── */
+  section {
+    position: relative;
+    padding: 100px 60px;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--purple-400);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    display: block; height: 1px; width: 40px;
+    background: var(--purple-500);
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(40px, 5vw, 72px);
+    line-height: 0.95;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+
+  .section-desc {
+    font-size: 16px;
+    color: var(--text-muted);
+    max-width: 520px;
+    line-height: 1.7;
+  }
+
+  /* ─── PROBLEM SECTION ────────────────────────────── */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin-top: 60px;
+    background: var(--border);
+  }
+
+  .problem-item {
+    background: var(--bg-card);
+    padding: 36px 40px;
+    position: relative;
+    overflow: hidden;
+    transition: background .2s;
+  }
+  .problem-item:hover { background: rgba(13,13,30,0.95); }
+
+  .problem-item::before {
+    content: '';
+    position: absolute; top: 0; left: 0;
+    width: 3px; height: 0;
+    background: var(--red);
+    transition: height .4s ease;
+  }
+  .problem-item:hover::before { height: 100%; }
+
+  .problem-num {
+    font-family: var(--font-display);
+    font-size: 56px;
+    color: rgba(239,68,68,0.12);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+
+  .problem-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text-main);
+  }
+
+  .problem-text {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* ─── CONSTRUCTOR ────────────────────────────────── */
+  .constructor-section {
+    padding: 100px 60px;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .constructor-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: end;
+    margin-bottom: 60px;
+  }
+
+  .constructor-intro {
+    font-size: 16px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .constructor-intro strong { color: var(--amber); }
+
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .module-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 28px 28px 24px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all .25s;
+    user-select: none;
+  }
+
+  .module-card::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--bg-glass);
+    opacity: 0;
+    transition: opacity .25s;
+  }
+
+  .module-card:hover {
+    border-color: var(--purple-500);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 40px rgba(124,58,237,0.15);
+  }
+  .module-card:hover::after { opacity: 1; }
+
+  .module-card.active {
+    border-color: var(--purple-400);
+    background: rgba(124,58,237,0.1);
+  }
+
+  .module-card.active::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--purple-500), var(--amber));
+  }
+
+  .module-check {
+    position: absolute; top: 16px; right: 16px;
+    width: 22px; height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s;
+    font-size: 12px;
+  }
+  .module-card.active .module-check {
+    background: var(--purple-500);
+    border-color: var(--purple-500);
+    color: #fff;
+  }
+
+  .module-icon {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+    font-size: 22px;
+  }
+
+  .module-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--text-main);
+  }
+
+  .module-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .module-tag {
+    display: inline-block;
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    background: rgba(124,58,237,0.15);
+    color: var(--purple-300);
+    border: 1px solid rgba(124,58,237,0.25);
+    letter-spacing: 0.05em;
+  }
+
+  /* ─── CONSTRUCTOR SUMMARY ────────────────────────── */
+  .constructor-summary {
+    margin-top: 40px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 32px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .summary-modules {
+    display: flex; gap: 8px; flex-wrap: wrap; flex: 1;
+  }
+
+  .summary-tag {
+    background: rgba(124,58,237,0.15);
+    border: 1px solid var(--purple-700);
+    color: var(--purple-300);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 4px 10px;
+    display: none;
+    clip-path: polygon(5px 0%, 100% 0%, calc(100% - 5px) 100%, 0% 100%);
+  }
+  .summary-tag.visible { display: block; }
+
+  .summary-empty {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .summary-cta {
+    display: flex; align-items: center; gap: 20px;
+  }
+
+  .summary-count {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .summary-count span {
+    color: var(--amber);
+    font-size: 22px;
+    font-weight: 500;
+    display: block;
+  }
+
+  /* ─── DASHBOARD PREVIEW ──────────────────────────── */
+  .dashboard-preview {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 0;
+    margin-top: 80px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .dash-topbar {
+    background: rgba(6,6,15,0.9);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .dash-dots { display: flex; gap: 6px; }
+  .dash-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .dash-dot:nth-child(1) { background: #EF4444; }
+  .dash-dot:nth-child(2) { background: var(--amber); }
+  .dash-dot:nth-child(3) { background: var(--green); }
+
+  .dash-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+  }
+
+  .dash-body {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+  }
+
+  .dash-sidebar {
+    background: rgba(6,6,15,0.6);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+  }
+
+  .dash-nav-item {
+    padding: 10px 20px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    transition: all .2s;
+    border-left: 2px solid transparent;
+  }
+  .dash-nav-item:hover,
+  .dash-nav-item.active {
+    color: var(--text-main);
+    background: rgba(124,58,237,0.1);
+    border-left-color: var(--purple-500);
+  }
+
+  .dash-main {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: auto auto;
+    gap: 16px;
+  }
+
+  .dash-kpi {
+    background: rgba(6,6,15,0.8);
+    border: 1px solid var(--border);
+    padding: 16px;
+  }
+
+  .dash-kpi-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .dash-kpi-value {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text-main);
+  }
+  .dash-kpi-value.green { color: var(--green); }
+  .dash-kpi-value.amber { color: var(--amber); }
+  .dash-kpi-value.red   { color: var(--red); }
+
+  .dash-kpi-change {
+    font-size: 10px;
+    margin-top: 4px;
+    color: var(--green);
+    font-family: var(--font-mono);
+  }
+
+  .dash-chart {
+    grid-column: span 2;
+    background: rgba(6,6,15,0.8);
+    border: 1px solid var(--border);
+    padding: 16px;
+    min-height: 140px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dash-chart-title {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  /* Sparkline bars */
+  .sparkline {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 80px;
+  }
+
+  .spark-bar {
+    flex: 1;
+    background: var(--purple-700);
+    border-radius: 1px;
+    transition: background .2s;
+    opacity: 0.7;
+  }
+  .spark-bar:last-child,
+  .spark-bar:nth-last-child(2) {
+    background: var(--purple-400);
+    opacity: 1;
+  }
+  .spark-bar:hover { background: var(--purple-300); opacity: 1; }
+
+  .dash-wide {
+    grid-column: span 4;
+    background: rgba(6,6,15,0.8);
+    border: 1px solid var(--border);
+    padding: 16px;
+  }
+
+  .dash-table-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 80px;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(124,58,237,0.1);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    align-items: center;
+  }
+
+  .dash-table-row:last-child { border-bottom: none; }
+  .dash-table-row.header { color: var(--text-muted); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  .badge-ok  { background: rgba(16,185,129,0.15); color: var(--green);  padding: 2px 8px; }
+  .badge-warn{ background: rgba(245,158,11,0.15);  color: var(--amber); padding: 2px 8px; }
+  .badge-err { background: rgba(239,68,68,0.15);   color: var(--red);   padding: 2px 8px; }
+
+  /* ─── METRICS TRACK ──────────────────────────────── */
+  .metrics-track {
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 60px;
+    overflow: hidden;
+  }
+
+  .metrics-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border: 1px solid var(--border);
+  }
+
+  .metric-cell {
+    padding: 40px 36px;
+    border-right: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .metric-cell:last-child { border-right: none; }
+
+  .metric-cell::before {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--purple-500), transparent);
+    transform: scaleX(0);
+    transition: transform .5s ease;
+  }
+  .metric-cell:hover::before { transform: scaleX(1); }
+
+  .metric-num {
+    font-family: var(--font-display);
+    font-size: 56px;
+    line-height: 1;
+    color: var(--purple-400);
+    margin-bottom: 8px;
+  }
+
+  .metric-unit {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--amber);
+  }
+
+  .metric-label {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  /* ─── INVESTMENT SECTION ─────────────────────────── */
+  .invest-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+    margin-top: 60px;
+  }
+
+  .invest-visual {
+    position: relative;
+  }
+
+  .gauge-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .gauge-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .gauge-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .gauge-name { color: var(--text-muted); }
+  .gauge-val  { color: var(--text-main); }
+
+  .gauge-track {
+    height: 6px;
+    background: rgba(124,58,237,0.1);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .gauge-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--purple-700), var(--purple-400));
+    position: relative;
+    transition: width 1s ease;
+  }
+  .gauge-fill.amber {
+    background: linear-gradient(90deg, #B45309, var(--amber));
+  }
+  .gauge-fill.green {
+    background: linear-gradient(90deg, #065F46, var(--green));
+  }
+
+  .gauge-fill::after {
+    content: '';
+    position: absolute; right: 0; top: 0; bottom: 0;
+    width: 20px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .invest-features {
+    display: flex; flex-direction: column; gap: 20px;
+  }
+
+  .invest-feature {
+    display: flex; gap: 16px; align-items: flex-start;
+    padding: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    transition: border-color .2s;
+  }
+  .invest-feature:hover { border-color: var(--purple-500); }
+
+  .invest-icon {
+    width: 40px; height: 40px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-glass);
+    border: 1px solid var(--border);
+    font-size: 18px;
+  }
+
+  .invest-feature h4 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .invest-feature p {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* ─── HOW IT WORKS ───────────────────────────────── */
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-top: 60px;
+    position: relative;
+  }
+
+  .steps-grid::before {
+    content: '';
+    position: absolute;
+    top: 28px; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--purple-700), var(--amber), var(--purple-700), transparent);
+  }
+
+  .step-item {
+    padding: 0 32px 40px;
+    text-align: center;
+  }
+
+  .step-num {
+    width: 56px; height: 56px;
+    border: 2px solid var(--purple-700);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 24px;
+    color: var(--purple-400);
+    margin: 0 auto 24px;
+    background: var(--bg-deep);
+    position: relative;
+    z-index: 1;
+    transition: all .3s;
+  }
+  .step-item:hover .step-num {
+    background: var(--purple-500);
+    color: #fff;
+    border-color: var(--purple-500);
+    box-shadow: 0 0 24px rgba(124,58,237,0.4);
+  }
+
+  .step-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .step-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* ─── TESTIMONIALS ───────────────────────────────── */
+  .testimonials {
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 80px 60px;
+  }
+
+  .test-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 60px;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .test-card {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    padding: 32px 28px;
+    position: relative;
+    transition: border-color .2s;
+  }
+  .test-card:hover { border-color: var(--purple-500); }
+
+  .test-card::before {
+    content: '"';
+    position: absolute; top: 20px; right: 24px;
+    font-family: var(--font-display);
+    font-size: 80px;
+    color: rgba(124,58,237,0.12);
+    line-height: 1;
+  }
+
+  .test-text {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .test-text strong { color: var(--text-main); }
+
+  .test-author {
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .test-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple-900), var(--purple-500));
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .test-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  .test-role {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .test-rating {
+    color: var(--amber);
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+
+  /* ─── CTA SECTION ────────────────────────────────── */
+  .cta-section {
+    padding: 120px 60px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cta-section .section-title {
+    max-width: 700px;
+    margin: 0 auto 20px;
+  }
+
+  .cta-section .section-desc {
+    max-width: 500px;
+    margin: 0 auto 48px;
+  }
+
+  /* ─── FOOTER ─────────────────────────────────────── */
+  footer {
+    background: rgba(6,6,15,0.98);
+    border-top: 1px solid var(--border);
+    padding: 60px 60px 40px;
+  }
+
+  .footer-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 60px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .footer-brand .nav-logo { font-size: 32px; margin-bottom: 16px; display: block; }
+
+  .footer-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .footer-col h5 {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    font-family: var(--font-mono);
+  }
+
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-col a {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color .2s;
+  }
+  .footer-col a:hover { color: var(--purple-300); }
+
+  .footer-bottom {
+    max-width: 1280px;
+    margin: 32px auto 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* ─── SCROLL ANIMATIONS ──────────────────────────── */
+  @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity .6s ease, transform .6s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ─── SCROLLING TICKER ───────────────────────────── */
+  .ticker-wrap {
+    background: rgba(124,58,237,0.08);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0;
+    overflow: hidden;
+  }
+
+  .ticker-track {
+    display: flex;
+    gap: 60px;
+    animation: ticker 30s linear infinite;
+    white-space: nowrap;
+  }
+
+  .ticker-item {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+  }
+  .ticker-item .val { color: var(--green); }
+  .ticker-item .neg { color: var(--red); }
+  .ticker-item .dot { color: var(--purple-400); }
+
+  @keyframes ticker {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .dash-nav-item { cursor: pointer; }
+  .dash-tab { display: none; }
+  .dash-tab.active { display: grid; }
+
+  /* ─── REVIEW WALL (MASONRY) ──────────────────────── */
+  .review-wall {
+    columns: 4 260px;
+    column-gap: 16px;
+    margin-top: 8px;
+  }
+
+  .review-wall .test-card {
+    break-inside: avoid;
+    margin-bottom: 16px;
+    display: inline-block;
+    width: 100%;
+    /* slight random tilt via nth-child — feels like paintings */
+    transform-origin: center center;
+    transition: transform .25s, box-shadow .25s, border-color .25s;
+  }
+  .review-wall .test-card:nth-child(4n+1) { transform: rotate(-0.4deg); }
+  .review-wall .test-card:nth-child(4n+2) { transform: rotate( 0.3deg); }
+  .review-wall .test-card:nth-child(4n+3) { transform: rotate(-0.2deg); }
+  .review-wall .test-card:nth-child(4n+4) { transform: rotate( 0.5deg); }
+  .review-wall .test-card:hover {
+    transform: rotate(0deg) translateY(-4px) scale(1.01) !important;
+    border-color: var(--purple-400);
+    box-shadow: 0 12px 40px rgba(124,58,237,0.18);
+    z-index: 2;
+    position: relative;
+  }
+
+  /* size variants */
+  .review-wall .test-card.sz-sm .test-text { font-size: 13px; }
+  .review-wall .test-card.sz-lg .test-text { font-size: 15px; }
+  .review-wall .test-card.sz-lg { padding: 36px 32px 28px; }
+
+  /* accent top border variants */
+  .review-wall .test-card.accent-amber { border-top: 2px solid var(--amber); }
+  .review-wall .test-card.accent-green { border-top: 2px solid var(--green); }
+  .review-wall .test-card.accent-purple{ border-top: 2px solid var(--purple-400); }
+
+  /* hide/show more */
+  .review-wall.collapsed .test-card:nth-child(n+13) { display: none; }
+
+  .review-more-wrap {
+    position: relative;
+    text-align: center;
+    margin-top: 8px;
+  }
+  .review-more-fade {
+    position: absolute;
+    bottom: 100%;
+    left: 0; right: 0;
+    height: 120px;
+    background: linear-gradient(to bottom, transparent, var(--bg-card));
+    pointer-events: none;
+    transition: opacity .4s;
+  }
+  .review-more-wrap.expanded .review-more-fade { opacity: 0; pointer-events: none; }
+
+  .review-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--purple-500);
+    color: var(--text-main);
+    padding: 14px 36px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    transition: background .2s, transform .15s;
+    margin-top: 24px;
+  }
+  .review-more-btn:hover { background: var(--purple-500); transform: scale(1.03); }
+  .review-more-count {
+    background: var(--purple-700);
+    color: var(--purple-300);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 2px 8px;
+  }
+  .review-more-wrap.expanded .review-more-btn { display: none; }
+
+  @media (max-width: 900px) {
+    .review-wall { columns: 1; }
+  }
+
+  /* ─── RESPONSIVE ─────────────────────────────────── */
+  @media (max-width: 900px) {
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    section, .constructor-section { padding: 60px 24px; }
+    .hero { padding: 120px 24px 60px; }
+    .problem-grid,
+    .invest-grid,
+    .steps-grid,
+    .test-grid,
+    .module-grid,
+    .metrics-inner { grid-template-columns: 1fr; }
+    .constructor-header { grid-template-columns: 1fr; }
+    .dash-body { grid-template-columns: 1fr; }
+    .dash-sidebar { display: none; }
+    .dash-main { grid-template-columns: 1fr 1fr; }
+    .dash-chart { grid-column: span 2; }
+    .dash-wide { grid-column: span 2; }
+    .footer-inner { grid-template-columns: 1fr 1fr; }
+    .telemetry-bar { flex-wrap: wrap; }
+    .tele-item { flex: 1 1 40%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── NAV ─────────────────────────────────────────── -->
+<nav>
+  <div class="nav-logo">WILD<span>SOLUTIONS</span></div>
+  <ul class="nav-links">
+    <li><a href="#problems">Почему теряют деньги</a></li>
+    <li><a href="#constructor">Модули</a></li>
+    <li><a href="#dashboard">Дашборд</a></li>
+    <li><a href="#investors">Инвесторам</a></li>
+    <li><a href="#reviews">Отзывы</a></li>
+  </ul>
+  <a href="https://t.me/ws26adminbot?start=site2" target="_blank" class="nav-cta" style="text-decoration:none;">Записаться к эксперту</a>
+</nav>
+
+<!-- ─── HERO ─────────────────────────────────────────── -->
+<section class="hero" style="max-width:100%;">
+  <div class="hero-bg"></div>
+  <div class="hero-track"></div>
+
+  <div class="hero-badge">🏁 Финансовый контроль · Маркетплейсы</div>
+
+  <h1 class="hero-title">
+    УПРАВЛЯЙ<br>
+    <span class="line-accent">КАК</span><br>
+    <span class="line-amber">ГОНЩИК</span>
+  </h1>
+
+  <p class="hero-subtitle">
+    Собери свою систему финансового контроля из нужных модулей.<br>
+    <strong>Полная телеметрия твоего бизнеса</strong> на маркетплейсах — Wildberries, Ozon, Яндекс Маркет.
+  </p>
+
+  <div class="hero-actions">
+    <a href="https://t.me/ws26adminbot?start=site2" target="_blank" class="btn-primary" style="text-decoration:none;">Узнать свою финансовую картину →</a>
+    <a href="https://t.me/ws26adminbot?start=site2" target="_blank" class="btn-outline" style="text-decoration:none;">Записаться к эксперту</a>
+  </div>
+
+  <!-- Telemetry Bar -->
+  <div class="telemetry-bar">
+    <div class="tele-item">
+      <div class="live-dot"></div>
+      <div class="tele-label">Маржа / сейчас</div>
+      <div class="tele-value up">34.2%</div>
+      <div class="tele-delta"><span class="pos">▲ +2.1%</span> vs прошлый месяц</div>
+    </div>
+    <div class="tele-item">
+      <div class="tele-label">Оборачиваемость</div>
+      <div class="tele-value amber">18 дней</div>
+      <div class="tele-delta"><span class="neg">▼ −3д</span> vs норма</div>
+    </div>
+    <div class="tele-item">
+      <div class="tele-label">ROI рекламы</div>
+      <div class="tele-value up">3.8x</div>
+      <div class="tele-delta"><span class="pos">▲ +0.4x</span> за неделю</div>
+    </div>
+    <div class="tele-item">
+      <div class="tele-label">Кассовый разрыв</div>
+      <div class="tele-value down">−₽140k</div>
+      <div class="tele-delta"><span class="neg">⚠</span> Прогноз: 12 дней</div>
+    </div>
+    <div class="tele-item">
+      <div class="tele-label">SKU в прибыли</div>
+      <div class="tele-value">82%</div>
+      <div class="tele-delta"><span class="pos">▲ +6%</span> за месяц</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── TICKER ───────────────────────────────────────── -->
+<div class="ticker-wrap">
+  <div class="ticker-track">
+    <div class="ticker-item"><span class="dot">●</span> WB Маржа <span class="val">+34.2%</span></div>
+    <div class="ticker-item"><span class="dot">●</span> OZON ROAS <span class="val">3.8x</span></div>
+    <div class="ticker-item"><span class="dot">●</span> Оборачиваемость <span class="neg">18д ▲</span></div>
+    <div class="ticker-item"><span class="dot">●</span> Кассовый разрыв <span class="neg">−₽140k</span></div>
+    <div class="ticker-item"><span class="dot">●</span> Unit-экономика <span class="val">✓ Прибыльно</span></div>
+    <div class="ticker-item"><span class="dot">●</span> Конверсия карточек <span class="val">6.4%</span></div>
+    <div class="ticker-item"><span class="dot">●</span> ACoS рекламы <span class="val">18.2%</span></div>
+    <div class="ticker-item"><span class="dot">●</span> Выплата WB <span class="val">через 3д</span></div>
+    <!-- repeat for seamless scroll -->
+    <div class="ticker-item"><span class="dot">●</span> WB Маржа <span class="val">+34.2%</span></div>
+    <div class="ticker-item"><span class="dot">●</span> OZON ROAS <span class="val">3.8x</span></div>
+    <div class="ticker-item"><span class="dot">●</span> Оборачиваемость <span class="neg">18д ▲</span></div>
+    <div class="ticker-item"><span class="dot">●</span> Кассовый разрыв <span class="neg">−₽140k</span></div>
+    <div class="ticker-item"><span class="dot">●</span> Unit-экономика <span class="val">✓ Прибыльно</span></div>
+    <div class="ticker-item"><span class="dot">●</span> Конверсия карточек <span class="val">6.4%</span></div>
+    <div class="ticker-item"><span class="dot">●</span> ACoS рекламы <span class="val">18.2%</span></div>
+    <div class="ticker-item"><span class="dot">●</span> Выплата WB <span class="val">через 3д</span></div>
+  </div>
+</div>
+
+<!-- ─── PROBLEM ───────────────────────────────────────── -->
+<section id="problems">
+  <div class="section-label">Диагностика</div>
+  <h2 class="section-title">ТЫ ТЕРЯЕШЬ<br><span style="color:var(--red)">ДЕНЬГИ</span></h2>
+  <p class="section-desc">Без правильной телеметрии ты едешь вслепую. Вот что происходит с большинством селлеров и инвесторов.</p>
+
+  <div class="problem-grid reveal">
+    <div class="problem-item">
+      <div class="problem-num">01</div>
+      <div class="problem-title">Невидимые потери маржи</div>
+      <div class="problem-text">Комиссии WB/Ozon, эквайринг, логистика и возвраты суммируются в «чёрный ящик». Реальная маржа может быть в 2 раза ниже расчётной — и ты об этом не знаешь.</div>
+    </div>
+    <div class="problem-item">
+      <div class="problem-num">02</div>
+      <div class="problem-title">Кассовый разрыв из ниоткуда</div>
+      <div class="problem-text">Выплаты раз в неделю, предоплата поставщикам, реклама вперёд — деньги заморожены, а товар нужен прямо сейчас. Разрыв появляется внезапно и блокирует рост.</div>
+    </div>
+    <div class="problem-item">
+      <div class="problem-num">03</div>
+      <div class="problem-title">Реклама без ROAS-контроля</div>
+      <div class="problem-text">Бюджет на рекламу сливается без связки с реальной прибылью. ACoS растёт, конверсия падает — но таблицы этого не показывают в реальном времени.</div>
+    </div>
+    <div class="problem-item">
+      <div class="problem-num">04</div>
+      <div class="problem-title">Склад заморозил капитал</div>
+      <div class="problem-text">Одни артикулы в out-of-stock, другие залежались мёртвым грузом. Деньги лежат на складе вместо оборота — оборачиваемость убивает доходность.</div>
+    </div>
+    <div class="problem-item">
+      <div class="problem-num">05</div>
+      <div class="problem-title">P&L только в конце месяца</div>
+      <div class="problem-text">Узнаёшь об убытках когда уже поздно что-то менять. Решения принимаются по «ощущению», а не по цифрам в режиме реального времени.</div>
+    </div>
+    <div class="problem-item">
+      <div class="problem-num">06</div>
+      <div class="problem-title">Инвестор не видит отчётности</div>
+      <div class="problem-text">Внешний капитал боится входить без прозрачного учёта. Нет P&L, нет модели ROI, нет доверия. Деньги уходят к тем, у кого есть структура.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── METRICS TRACK ─────────────────────────────────── -->
+<div class="metrics-track">
+  <div class="metrics-inner reveal">
+    <div class="metric-cell">
+      <div class="metric-num">+34<span class="metric-unit">%</span></div>
+      <div class="metric-label">средний прирост маржи после внедрения unit-экономики</div>
+    </div>
+    <div class="metric-cell">
+      <div class="metric-num">2.1<span class="metric-unit">x</span></div>
+      <div class="metric-label">ускорение оборачиваемости при правильном управлении стоком</div>
+    </div>
+    <div class="metric-cell">
+      <div class="metric-num">-62<span class="metric-unit">%</span></div>
+      <div class="metric-label">сокращение рекламного бюджета при сохранении продаж</div>
+    </div>
+    <div class="metric-cell">
+      <div class="metric-num">18<span class="metric-unit">дн</span></div>
+      <div class="metric-label">срок до первого финансового отчёта после подключения</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── CONSTRUCTOR ───────────────────────────────────── -->
+<section class="constructor-section" id="constructor">
+  <div class="constructor-header">
+    <div>
+      <div class="section-label">Модульная система</div>
+      <h2 class="section-title">СОБЕРИ<br>СВОЙ<br><span style="color:var(--amber)">БОЛИД</span></h2>
+    </div>
+    <div>
+      <p class="constructor-intro">
+        Как в F1: каждая команда собирает машину под свою стратегию.<br><br>
+        Выбери модули которые кажутся нужными — наш финансовый эксперт разберёт твою ситуацию и покажет, какой набор даст максимальный эффект <strong>именно тебе</strong>.
+        <br><br>
+        <strong>Выбери интересные модули и обсуди их с экспертом ↓</strong>
+      </p>
+    </div>
+  </div>
+
+  <div class="module-grid" id="moduleGrid">
+
+    <div class="module-card active" data-module="unit-eco" onclick="toggleModule(this)">
+      <div class="module-check">✓</div>
+      <div class="module-icon">📊</div>
+      <div class="module-name">Unit-экономика</div>
+      <div class="module-desc">Маржа на каждый SKU с учётом всех комиссий WB/Ozon, логистики, возвратов, упаковки</div>
+      <div class="module-tag">CORE</div>
+    </div>
+
+    <div class="module-card active" data-module="cashflow" onclick="toggleModule(this)">
+      <div class="module-check">✓</div>
+      <div class="module-icon">💸</div>
+      <div class="module-name">Кэш-флоу менеджер</div>
+      <div class="module-desc">Прогноз разрывов, календарь выплат, управление ликвидностью в реальном времени</div>
+      <div class="module-tag">CORE</div>
+    </div>
+
+    <div class="module-card" data-module="pnl" onclick="toggleModule(this)">
+      <div class="module-check"></div>
+      <div class="module-icon">📈</div>
+      <div class="module-name">P&L Real-time</div>
+      <div class="module-desc">Отчёт о прибылях и убытках в разрезе SKU, категорий и брендов — обновляется ежедневно</div>
+      <div class="module-tag">FINANCE</div>
+    </div>
+
+    <div class="module-card" data-module="ads" onclick="toggleModule(this)">
+      <div class="module-check"></div>
+      <div class="module-icon">🎯</div>
+      <div class="module-name">Контроль рекламы</div>
+      <div class="module-desc">ROAS, ACoS, ДРР по каждой кампании. Автоматическое отключение при превышении порога</div>
+      <div class="module-tag">MARKETING</div>
+    </div>
+
+    <div class="module-card" data-module="inventory" onclick="toggleModule(this)">
+      <div class="module-check"></div>
+      <div class="module-icon">📦</div>
+      <div class="module-name">Управление складом</div>
+      <div class="module-desc">ABC-анализ товаров, расчёт точки дозаказа, оборачиваемость, заморозка капитала в остатках</div>
+      <div class="module-tag">OPS</div>
+    </div>
+
+    <div class="module-card" data-module="pricing" onclick="toggleModule(this)">
+      <div class="module-check"></div>
+      <div class="module-icon">⚡</div>
+      <div class="module-name">Ценовой движок</div>
+      <div class="module-desc">Конкурентный мониторинг, защита маржи, автоматическое переценивание в рамках задаваемых границ</div>
+      <div class="module-tag">SALES</div>
+    </div>
+
+    <div class="module-card" data-module="tax" onclick="toggleModule(this)">
+      <div class="module-check"></div>
+      <div class="module-icon">🧾</div>
+      <div class="module-name">Налоговый оптимизатор</div>
+      <div class="module-desc">Расчёт УСН, НДС при выходе на ОСНО, разбивка по системам налогообложения для нескольких ООО/ИП</div>
+      <div class="module-tag">LEGAL</div>
+    </div>
+
+    <div class="module-card" data-module="forecast" onclick="toggleModule(this)">
+      <div class="module-check"></div>
+      <div class="module-icon">🔮</div>
+      <div class="module-name">Финансовое прогнозирование</div>
+      <div class="module-desc">Модели роста, сценарный анализ, прогноз выручки на 3-12 месяцев на основе исторических данных</div>
+      <div class="module-tag">STRATEGY</div>
+    </div>
+
+    <div class="module-card" data-module="supplier" onclick="toggleModule(this)">
+      <div class="module-check"></div>
+      <div class="module-icon">🤝</div>
+      <div class="module-name">Управление поставщиками</div>
+      <div class="module-desc">Учёт отсрочек, сравнение условий, расчёт стоимости кредита поставщика vs банковского</div>
+      <div class="module-tag">OPS</div>
+    </div>
+
+    <div class="module-card" data-module="investor" onclick="toggleModule(this)">
+      <div class="module-check"></div>
+      <div class="module-icon">💼</div>
+      <div class="module-name">Инвестор-отчётность</div>
+      <div class="module-desc">Автоматические отчёты для инвесторов: ROI, IRR, payback period, распределение прибыли</div>
+      <div class="module-tag">INVESTOR</div>
+    </div>
+
+    <div class="module-card" data-module="multicabinet" onclick="toggleModule(this)">
+      <div class="module-check"></div>
+      <div class="module-icon">🔗</div>
+      <div class="module-name">Мультикабинет</div>
+      <div class="module-desc">Управление несколькими ЛК WB/Ozon в единой системе. Консолидированный P&L по всем кабинетам</div>
+      <div class="module-tag">SCALE</div>
+    </div>
+
+    <div class="module-card" data-module="alerts" onclick="toggleModule(this)">
+      <div class="module-check"></div>
+      <div class="module-icon">🚨</div>
+      <div class="module-name">Система алертов</div>
+      <div class="module-desc">Push-уведомления при падении маржи, out-of-stock, превышении ACoS и кассовом разрыве</div>
+      <div class="module-tag">SAFETY</div>
+    </div>
+
+  </div>
+
+  <!-- Constructor Summary -->
+  <div class="constructor-summary" id="constructorSummary">
+    <div>
+      <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:10px;letter-spacing:0.12em;text-transform:uppercase;">Выбранные модули</div>
+      <div class="summary-modules" id="summaryModules">
+        <span class="summary-empty" id="summaryEmpty">Нажми на модули выше ↑</span>
+      </div>
+    </div>
+    <div class="summary-cta">
+      <div class="summary-count">
+        <span id="moduleCount">2</span>
+        модуля выбрано
+      </div>
+      <a href="https://t.me/ws26adminbot?start=site2" target="_blank" class="btn-primary" style="text-decoration:none;">Обсудить с экспертом →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── DASHBOARD PREVIEW ─────────────────────────────── -->
+<section id="dashboard" style="padding-bottom: 40px;">
+  <div class="section-label">Демо-дашборд</div>
+  <h2 class="section-title">ТВОЯ<br><span style="color:var(--purple-400)">ПРИБОРНАЯ<br>ПАНЕЛЬ</span></h2>
+  <p class="section-desc" style="margin-bottom:40px">Всё что нужно для принятия решений — в одном экране. Как кокпит пилота.</p>
+
+  <div class="dashboard-preview reveal">
+    <div class="dash-topbar">
+      <div class="dash-dots">
+        <div class="dash-dot"></div><div class="dash-dot"></div><div class="dash-dot"></div>
+      </div>
+      <div class="dash-title">WILDSOLUTIONS · FINANCIAL COCKPIT · LIVE</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--green);display:flex;align-items:center;gap:6px;">
+        <span style="width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;animation:blink 1.2s infinite;"></span>
+        СИНХРОНИЗИРОВАНО
+      </div>
+    </div>
+
+    <div class="dash-body">
+      <!-- Sidebar -->
+      <div class="dash-sidebar">
+        <div class="dash-nav-item active" onclick="dashTab(this,'pnl')">📊 P&amp;L сводка</div>
+        <div class="dash-nav-item" onclick="dashTab(this,'cashflow')">💸 Кэш-флоу</div>
+        <div class="dash-nav-item" onclick="dashTab(this,'stock')">📦 Склад</div>
+        <div class="dash-nav-item" onclick="dashTab(this,'ads')">🎯 Реклама</div>
+        <div class="dash-nav-item" onclick="dashTab(this,'prices')">⚡ Цены</div>
+        <div class="dash-nav-item" onclick="dashTab(this,'forecast')">🔮 Прогноз</div>
+        <div class="dash-nav-item" onclick="dashTab(this,'taxes')">🧾 Налоги</div>
+        <div class="dash-nav-item" style="margin-top:auto;" onclick="dashTab(this,'settings')">⚙️ Настройки</div>
+      </div>
+
+      <!-- ════ TAB: P&L ════ -->
+      <div class="dash-main dash-tab active" id="tab-pnl">
+        <div class="dash-kpi"><div class="dash-kpi-label">Выручка / месяц</div><div class="dash-kpi-value">₽4.2M</div><div class="dash-kpi-change">▲ +18% vs пред.</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">Чистая прибыль</div><div class="dash-kpi-value green">₽1.43M</div><div class="dash-kpi-change">▲ +24% vs пред.</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">ROAS рекламы</div><div class="dash-kpi-value amber">3.8x</div><div class="dash-kpi-change">▲ +0.4x vs пред.</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">Кассовый разрыв</div><div class="dash-kpi-value red">−₽140k</div><div class="dash-kpi-change" style="color:var(--amber);">⚠ через 12 дней</div></div>
+        <div class="dash-chart"><div class="dash-chart-title">Выручка по неделям · ₽</div>
+          <div class="sparkline">
+            <div class="spark-bar" style="height:45%"></div><div class="spark-bar" style="height:52%"></div><div class="spark-bar" style="height:48%"></div><div class="spark-bar" style="height:61%"></div><div class="spark-bar" style="height:58%"></div><div class="spark-bar" style="height:70%"></div><div class="spark-bar" style="height:65%"></div><div class="spark-bar" style="height:80%"></div><div class="spark-bar" style="height:75%"></div><div class="spark-bar" style="height:88%"></div><div class="spark-bar" style="height:84%"></div><div class="spark-bar" style="height:100%"></div>
+          </div>
+        </div>
+        <div class="dash-chart"><div class="dash-chart-title">Маржа по категориям · %</div>
+          <div class="sparkline">
+            <div class="spark-bar" style="height:80%;background:linear-gradient(180deg,var(--green),#065F46)"></div>
+            <div class="spark-bar" style="height:60%;background:linear-gradient(180deg,var(--amber),#B45309)"></div>
+            <div class="spark-bar" style="height:35%;background:linear-gradient(180deg,var(--red),#7F1D1D)"></div>
+            <div class="spark-bar" style="height:70%;background:linear-gradient(180deg,var(--green),#065F46)"></div>
+            <div class="spark-bar" style="height:45%;background:linear-gradient(180deg,var(--amber),#B45309)"></div>
+          </div>
+        </div>
+        <div class="dash-wide">
+          <div class="dash-chart-title" style="margin-bottom:12px;">Топ SKU · Контроль прибыльности</div>
+          <div class="dash-table-row header"><span>Артикул / Название</span><span>Выручка</span><span>Маржа</span><span>ROAS</span><span>Статус</span></div>
+          <div class="dash-table-row"><span>WB-44291 · Термос 500мл</span><span>₽842k</span><span style="color:var(--green)">38.2%</span><span>4.1x</span><span><div class="badge-ok">✓ ОК</div></span></div>
+          <div class="dash-table-row"><span>WB-38102 · Рюкзак туристич.</span><span>₽621k</span><span style="color:var(--amber)">22.1%</span><span>2.8x</span><span><div class="badge-warn">⚠ Следить</div></span></div>
+          <div class="dash-table-row"><span>OZ-91834 · Кружка 350мл</span><span>₽198k</span><span style="color:var(--red)">8.4%</span><span>1.2x</span><span><div class="badge-err">✗ Убыток</div></span></div>
+        </div>
+      </div>
+
+      <!-- ════ TAB: КЭШФЛОУ ════ -->
+      <div class="dash-main dash-tab" id="tab-cashflow" style="display:none;">
+        <div class="dash-kpi"><div class="dash-kpi-label">Остаток сегодня</div><div class="dash-kpi-value green">₽862k</div><div class="dash-kpi-change">На расчётном счёте</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">Выплата WB</div><div class="dash-kpi-value amber">₽390k</div><div class="dash-kpi-change">Через 3 дня</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">К оплате поставщику</div><div class="dash-kpi-value red">−₽540k</div><div class="dash-kpi-change">Срок: 8 дней</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">Прогноз разрыва</div><div class="dash-kpi-value red">−₽140k</div><div class="dash-kpi-change" style="color:var(--amber);">⚠ через 12 дней</div></div>
+        <div class="dash-chart dash-chart--wide" style="grid-column:span 4;min-height:120px;">
+          <div class="dash-chart-title">Календарь движения денег · ближайшие 30 дней</div>
+          <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-top:8px;">
+            <div style="background:rgba(16,185,129,0.3);border:1px solid var(--green);padding:6px 4px;text-align:center;font-family:var(--font-mono);font-size:9px;color:var(--green);">+390k<br><span style="color:var(--text-muted)">WB</span></div>
+            <div style="background:rgba(239,68,68,0.2);border:1px solid var(--red);padding:6px 4px;text-align:center;font-family:var(--font-mono);font-size:9px;color:var(--red);">−540k<br><span style="color:var(--text-muted)">Пост.</span></div>
+            <div style="background:rgba(124,58,237,0.15);border:1px solid var(--border);padding:6px 4px;text-align:center;font-family:var(--font-mono);font-size:9px;color:var(--text-muted);">—</div>
+            <div style="background:rgba(16,185,129,0.3);border:1px solid var(--green);padding:6px 4px;text-align:center;font-family:var(--font-mono);font-size:9px;color:var(--green);">+210k<br><span style="color:var(--text-muted)">OZ</span></div>
+            <div style="background:rgba(124,58,237,0.15);border:1px solid var(--border);padding:6px 4px;text-align:center;font-family:var(--font-mono);font-size:9px;color:var(--text-muted);">—</div>
+            <div style="background:rgba(245,158,11,0.2);border:1px solid var(--amber);padding:6px 4px;text-align:center;font-family:var(--font-mono);font-size:9px;color:var(--amber);">−80k<br><span style="color:var(--text-muted)">Реклам</span></div>
+            <div style="background:rgba(239,68,68,0.2);border:1px solid var(--red);padding:6px 4px;text-align:center;font-family:var(--font-mono);font-size:9px;color:var(--red);">⚠ −140k<br><span style="color:var(--text-muted)">Разрыв</span></div>
+            <div style="background:rgba(16,185,129,0.3);border:1px solid var(--green);padding:6px 4px;text-align:center;font-family:var(--font-mono);font-size:9px;color:var(--green);">+420k<br><span style="color:var(--text-muted)">WB</span></div>
+            <div style="background:rgba(124,58,237,0.15);border:1px solid var(--border);padding:6px 4px;text-align:center;font-family:var(--font-mono);font-size:9px;color:var(--text-muted);">—</div>
+            <div style="background:rgba(16,185,129,0.3);border:1px solid var(--green);padding:6px 4px;text-align:center;font-family:var(--font-mono);font-size:9px;color:var(--green);">+195k<br><span style="color:var(--text-muted)">OZ</span></div>
+          </div>
+        </div>
+        <div class="dash-wide">
+          <div class="dash-chart-title" style="margin-bottom:12px;">Источники и расходы · текущий месяц</div>
+          <div class="dash-table-row header"><span>Статья</span><span>Сумма</span><span>Дата</span><span>Тип</span><span>Статус</span></div>
+          <div class="dash-table-row"><span>Выплата WB (расч. нед.)</span><span style="color:var(--green)">+₽390k</span><span>Чер. 3д</span><span style="color:var(--text-muted)">Приход</span><span><div class="badge-ok">Ожидается</div></span></div>
+          <div class="dash-table-row"><span>Поставщик «АльфаТовар»</span><span style="color:var(--red)">−₽540k</span><span>Чер. 8д</span><span style="color:var(--text-muted)">Расход</span><span><div class="badge-warn">⚠ Срочно</div></span></div>
+          <div class="dash-table-row"><span>Рекламный бюджет WB</span><span style="color:var(--amber)">−₽80k</span><span>Сегодня</span><span style="color:var(--text-muted)">Расход</span><span><div class="badge-ok">Списано</div></span></div>
+        </div>
+      </div>
+
+      <!-- ════ TAB: СКЛАД ════ -->
+      <div class="dash-main dash-tab" id="tab-stock" style="display:none;">
+        <div class="dash-kpi"><div class="dash-kpi-label">SKU на складе</div><div class="dash-kpi-value">248</div><div class="dash-kpi-change">+12 за неделю</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">Оборачиваемость</div><div class="dash-kpi-value amber">18 дн</div><div class="dash-kpi-change" style="color:var(--red);">▲ норма 14 дн</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">Out-of-stock</div><div class="dash-kpi-value red">7 SKU</div><div class="dash-kpi-change" style="color:var(--red);">⚠ Нужна поставка</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">Заморожено в стоке</div><div class="dash-kpi-value">₽2.8M</div><div class="dash-kpi-change" style="color:var(--amber);">Медленный товар</div></div>
+        <div class="dash-chart">
+          <div class="dash-chart-title">ABC-анализ по обороту · %</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+            <div style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:10px;">
+              <span style="color:var(--green);width:14px;">A</span>
+              <div style="flex:1;height:10px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);position:relative;">
+                <div style="width:68%;height:100%;background:var(--green);opacity:0.7;"></div>
+              </div>
+              <span style="color:var(--green)">68%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:10px;">
+              <span style="color:var(--amber);width:14px;">B</span>
+              <div style="flex:1;height:10px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);position:relative;">
+                <div style="width:22%;height:100%;background:var(--amber);opacity:0.7;"></div>
+              </div>
+              <span style="color:var(--amber)">22%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:10px;">
+              <span style="color:var(--red);width:14px;">C</span>
+              <div style="flex:1;height:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);position:relative;">
+                <div style="width:10%;height:100%;background:var(--red);opacity:0.7;"></div>
+              </div>
+              <span style="color:var(--red)">10%</span>
+            </div>
+          </div>
+        </div>
+        <div class="dash-chart">
+          <div class="dash-chart-title">Остатки по складам · дней запаса</div>
+          <div class="sparkline">
+            <div class="spark-bar" style="height:90%;background:linear-gradient(180deg,var(--green),#065F46)"></div>
+            <div class="spark-bar" style="height:40%;background:linear-gradient(180deg,var(--amber),#B45309)"></div>
+            <div class="spark-bar" style="height:10%;background:linear-gradient(180deg,var(--red),#7F1D1D)"></div>
+            <div class="spark-bar" style="height:75%;background:linear-gradient(180deg,var(--green),#065F46)"></div>
+            <div class="spark-bar" style="height:55%;background:linear-gradient(180deg,var(--amber),#B45309)"></div>
+            <div class="spark-bar" style="height:5%;background:linear-gradient(180deg,var(--red),#7F1D1D)"></div>
+          </div>
+        </div>
+        <div class="dash-wide">
+          <div class="dash-chart-title" style="margin-bottom:12px;">Критичные позиции · дозаказ</div>
+          <div class="dash-table-row header"><span>SKU / Товар</span><span>Остаток</span><span>Оборач.</span><span>Дозаказ</span><span>Статус</span></div>
+          <div class="dash-table-row"><span>WB-44291 · Термос 500мл</span><span>42 шт</span><span>12 дн</span><span>200 шт</span><span><div class="badge-warn">⚠ Заказать</div></span></div>
+          <div class="dash-table-row"><span>WB-11203 · Кружка термо</span><span>3 шт</span><span>4 дн</span><span>150 шт</span><span><div class="badge-err">✗ Срочно!</div></span></div>
+          <div class="dash-table-row"><span>OZ-66120 · Лоток органайзер</span><span>310 шт</span><span>48 дн</span><span>—</span><span><div class="badge-ok">✓ Залежал</div></span></div>
+        </div>
+      </div>
+
+      <!-- ════ TAB: РЕКЛАМА ════ -->
+      <div class="dash-main dash-tab" id="tab-ads" style="display:none;">
+        <div class="dash-kpi"><div class="dash-kpi-label">Расход / мес</div><div class="dash-kpi-value amber">₽320k</div><div class="dash-kpi-change">▲ +8% vs пред.</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">ROAS</div><div class="dash-kpi-value green">3.8x</div><div class="dash-kpi-change">▲ +0.4x vs пред.</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">ACoS</div><div class="dash-kpi-value amber">18.2%</div><div class="dash-kpi-change" style="color:var(--amber);">Порог: 22%</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">ДРР</div><div class="dash-kpi-value green">8.4%</div><div class="dash-kpi-change">▼ −1.2% vs пред.</div></div>
+        <div class="dash-chart">
+          <div class="dash-chart-title">Расход рекламы по неделям · ₽</div>
+          <div class="sparkline">
+            <div class="spark-bar" style="height:55%"></div><div class="spark-bar" style="height:62%"></div><div class="spark-bar" style="height:58%"></div><div class="spark-bar" style="height:71%"></div><div class="spark-bar" style="height:68%"></div><div class="spark-bar" style="height:75%"></div><div class="spark-bar" style="height:70%"></div><div class="spark-bar" style="height:82%"></div><div class="spark-bar" style="height:78%"></div><div class="spark-bar" style="height:90%"></div><div class="spark-bar" style="height:86%"></div><div class="spark-bar" style="height:100%"></div>
+          </div>
+        </div>
+        <div class="dash-chart">
+          <div class="dash-chart-title">ROAS по кампаниям · x</div>
+          <div class="sparkline">
+            <div class="spark-bar" style="height:90%;background:linear-gradient(180deg,var(--green),#065F46)"></div>
+            <div class="spark-bar" style="height:72%;background:linear-gradient(180deg,var(--green),#065F46)"></div>
+            <div class="spark-bar" style="height:40%;background:linear-gradient(180deg,var(--amber),#B45309)"></div>
+            <div class="spark-bar" style="height:25%;background:linear-gradient(180deg,var(--red),#7F1D1D)"></div>
+            <div class="spark-bar" style="height:65%;background:linear-gradient(180deg,var(--green),#065F46)"></div>
+          </div>
+        </div>
+        <div class="dash-wide">
+          <div class="dash-chart-title" style="margin-bottom:12px;">Кампании · эффективность</div>
+          <div class="dash-table-row header"><span>Кампания</span><span>Расход</span><span>ROAS</span><span>ACoS</span><span>Действие</span></div>
+          <div class="dash-table-row"><span>Термос 500мл · Поиск</span><span>₽84k</span><span style="color:var(--green)">5.2x</span><span style="color:var(--green)">12%</span><span><div class="badge-ok">✓ Масштаб</div></span></div>
+          <div class="dash-table-row"><span>Рюкзак · Карточка</span><span>₽112k</span><span style="color:var(--amber)">2.4x</span><span style="color:var(--amber)">21%</span><span><div class="badge-warn">⚠ Следить</div></span></div>
+          <div class="dash-table-row"><span>Кружка · Поиск</span><span>₽68k</span><span style="color:var(--red)">0.9x</span><span style="color:var(--red)">38%</span><span><div class="badge-err">✗ Стоп!</div></span></div>
+        </div>
+      </div>
+
+      <!-- ════ TAB: ЦЕНЫ ════ -->
+      <div class="dash-main dash-tab" id="tab-prices" style="display:none;">
+        <div class="dash-kpi"><div class="dash-kpi-label">Перецен. за неделю</div><div class="dash-kpi-value amber">14 SKU</div><div class="dash-kpi-change">Автоматически</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">Конкурентов ниже</div><div class="dash-kpi-value red">3 SKU</div><div class="dash-kpi-change" style="color:var(--red);">⚠ Требует реакции</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">Защита маржи</div><div class="dash-kpi-value green">Вкл.</div><div class="dash-kpi-change">Порог: 18% мин.</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">Мониторинг</div><div class="dash-kpi-value green">Каждый час</div><div class="dash-kpi-change">186 конкурентов</div></div>
+        <div class="dash-chart">
+          <div class="dash-chart-title">Ценовая динамика · Термос 500мл · 12 нед.</div>
+          <div class="sparkline">
+            <div class="spark-bar" style="height:60%"></div><div class="spark-bar" style="height:58%"></div><div class="spark-bar" style="height:62%"></div><div class="spark-bar" style="height:55%"></div><div class="spark-bar" style="height:70%"></div><div class="spark-bar" style="height:68%"></div><div class="spark-bar" style="height:72%"></div><div class="spark-bar" style="height:75%"></div><div class="spark-bar" style="height:72%"></div><div class="spark-bar" style="height:80%"></div><div class="spark-bar" style="height:82%"></div><div class="spark-bar" style="height:78%;background:var(--amber)"></div>
+          </div>
+        </div>
+        <div class="dash-chart">
+          <div class="dash-chart-title">Позиция в выдаче vs цена</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+            <div style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:10px;">
+              <span style="color:var(--text-muted);width:60px;font-size:9px;">₽1 290</span>
+              <div style="flex:1;height:8px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);"><div style="width:82%;height:100%;background:var(--green);opacity:.7;"></div></div>
+              <span style="color:var(--green);font-size:9px;">#4</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:10px;">
+              <span style="color:var(--text-muted);width:60px;font-size:9px;">₽1 390</span>
+              <div style="flex:1;height:8px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);"><div style="width:58%;height:100%;background:var(--amber);opacity:.7;"></div></div>
+              <span style="color:var(--amber);font-size:9px;">#12</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:10px;">
+              <span style="color:var(--text-muted);width:60px;font-size:9px;">₽1 490</span>
+              <div style="flex:1;height:8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);"><div style="width:28%;height:100%;background:var(--red);opacity:.7;"></div></div>
+              <span style="color:var(--red);font-size:9px;">#34</span>
+            </div>
+          </div>
+        </div>
+        <div class="dash-wide">
+          <div class="dash-chart-title" style="margin-bottom:12px;">Мониторинг конкурентов · сейчас</div>
+          <div class="dash-table-row header"><span>SKU / Товар</span><span>Ваша цена</span><span>Мин. у конкурента</span><span>Разница</span><span>Автоцена</span></div>
+          <div class="dash-table-row"><span>Термос 500мл</span><span>₽1 290</span><span style="color:var(--green)">₽1 350</span><span style="color:var(--green)">−₽60 (выгоднее)</span><span><div class="badge-ok">✓ Держим</div></span></div>
+          <div class="dash-table-row"><span>Рюкзак туристич.</span><span>₽2 490</span><span style="color:var(--amber)">₽2 390</span><span style="color:var(--amber)">+₽100 (выше)</span><span><div class="badge-warn">⚠ Снизить?</div></span></div>
+          <div class="dash-table-row"><span>Кружка 350мл</span><span>₽590</span><span style="color:var(--red)">₽510</span><span style="color:var(--red)">+₽80 (рискуем)</span><span><div class="badge-err">✗ Мин.маржа!</div></span></div>
+        </div>
+      </div>
+
+      <!-- ════ TAB: ПРОГНОЗ ════ -->
+      <div class="dash-main dash-tab" id="tab-forecast" style="display:none;">
+        <div class="dash-kpi"><div class="dash-kpi-label">Прогноз / след. мес.</div><div class="dash-kpi-value green">₽5.1M</div><div class="dash-kpi-change">▲ +21% vs текущий</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">Прогноз прибыли</div><div class="dash-kpi-value green">₽1.74M</div><div class="dash-kpi-change">▲ +22% vs текущий</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">Точность модели</div><div class="dash-kpi-value amber">94.2%</div><div class="dash-kpi-change">За последние 6 мес.</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">Горизонт прогноза</div><div class="dash-kpi-value">12 мес.</div><div class="dash-kpi-change">3 сценария</div></div>
+        <div class="dash-chart dash-chart--wide" style="grid-column:span 4;min-height:130px;">
+          <div class="dash-chart-title">Сценарии роста · выручка · ₽</div>
+          <div style="display:flex;align-items:flex-end;gap:12px;margin-top:8px;height:80px;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div style="width:100%;height:60%;background:linear-gradient(180deg,var(--red),#7F1D1D);opacity:.7;border-radius:1px;"></div>
+              <div style="font-family:var(--font-mono);font-size:9px;color:var(--red)">Bear ₽3.2M</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div style="width:100%;height:80%;background:linear-gradient(180deg,var(--amber),#B45309);opacity:.7;border-radius:1px;"></div>
+              <div style="font-family:var(--font-mono);font-size:9px;color:var(--amber)">Base ₽4.2M</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div style="width:100%;height:100%;background:linear-gradient(180deg,var(--green),#065F46);border-radius:1px;position:relative;">
+                <div style="position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-family:var(--font-mono);font-size:8px;color:var(--green);white-space:nowrap;">▲ текущий тренд</div>
+              </div>
+              <div style="font-family:var(--font-mono);font-size:9px;color:var(--green)">Bull ₽5.8M</div>
+            </div>
+            <div style="flex:1.5;display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div style="width:100%;height:90%;background:linear-gradient(180deg,var(--purple-400),var(--purple-700));border-radius:1px;border:1px dashed var(--purple-400);"></div>
+              <div style="font-family:var(--font-mono);font-size:9px;color:var(--purple-300)">Прогноз ₽5.1M</div>
+            </div>
+          </div>
+        </div>
+        <div class="dash-wide">
+          <div class="dash-chart-title" style="margin-bottom:12px;">Прогноз по категориям · след. квартал</div>
+          <div class="dash-table-row header"><span>Категория</span><span>Текущая выручка</span><span>Прогноз</span><span>Δ</span><span>Уверенность</span></div>
+          <div class="dash-table-row"><span>Термосы / Посуда</span><span>₽1.84M</span><span style="color:var(--green)">₽2.3M</span><span style="color:var(--green)">+25%</span><span><div class="badge-ok">92%</div></span></div>
+          <div class="dash-table-row"><span>Рюкзаки / Сумки</span><span>₽1.21M</span><span style="color:var(--amber)">₽1.4M</span><span style="color:var(--amber)">+16%</span><span><div class="badge-warn">78%</div></span></div>
+          <div class="dash-table-row"><span>Аксессуары</span><span>₽0.74M</span><span style="color:var(--green)">₽1.1M</span><span style="color:var(--green)">+49%</span><span><div class="badge-ok">85%</div></span></div>
+        </div>
+      </div>
+
+      <!-- ════ TAB: НАЛОГИ ════ -->
+      <div class="dash-main dash-tab" id="tab-taxes" style="display:none;">
+        <div class="dash-kpi"><div class="dash-kpi-label">Режим</div><div class="dash-kpi-value amber">УСН 6%</div><div class="dash-kpi-change">ИП · Оборот ₽50.4M/г</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">Налог начислен</div><div class="dash-kpi-value red">₽252k</div><div class="dash-kpi-change">Квартал · к уплате</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">До порога ОСНО</div><div class="dash-kpi-value amber">₽14.6M</div><div class="dash-kpi-change">Осталось в году</div></div>
+        <div class="dash-kpi"><div class="dash-kpi-label">Экономия год</div><div class="dash-kpi-value green">₽820k</div><div class="dash-kpi-change">vs ОСНО без НДС-оптим.</div></div>
+        <div class="dash-chart" style="grid-column:span 2;">
+          <div class="dash-chart-title">УСН vs ОСНО · нагрузка при вашем обороте</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+            <div style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:10px;">
+              <span style="color:var(--text-muted);width:80px;font-size:9px;">УСН 6%</span>
+              <div style="flex:1;height:12px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,.3);"><div style="width:30%;height:100%;background:var(--green);opacity:.8;"></div></div>
+              <span style="color:var(--green);font-size:9px;">₽252k</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:10px;">
+              <span style="color:var(--text-muted);width:80px;font-size:9px;">УСН 15%</span>
+              <div style="flex:1;height:12px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,.3);"><div style="width:55%;height:100%;background:var(--amber);opacity:.7;"></div></div>
+              <span style="color:var(--amber);font-size:9px;">₽468k</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:10px;">
+              <span style="color:var(--text-muted);width:80px;font-size:9px;">ОСНО</span>
+              <div style="flex:1;height:12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,.3);"><div style="width:100%;height:100%;background:var(--red);opacity:.7;"></div></div>
+              <span style="color:var(--red);font-size:9px;">₽1.07M</span>
+            </div>
+          </div>
+        </div>
+        <div class="dash-chart">
+          <div class="dash-chart-title">Налог по кварталам · ₽</div>
+          <div class="sparkline">
+            <div class="spark-bar" style="height:55%;background:linear-gradient(180deg,var(--purple-400),var(--purple-700))"></div>
+            <div class="spark-bar" style="height:68%;background:linear-gradient(180deg,var(--purple-400),var(--purple-700))"></div>
+            <div class="spark-bar" style="height:78%;background:linear-gradient(180deg,var(--purple-400),var(--purple-700))"></div>
+            <div class="spark-bar" style="height:100%;background:linear-gradient(180deg,var(--amber),#B45309)"></div>
+          </div>
+        </div>
+        <div class="dash-wide">
+          <div class="dash-chart-title" style="margin-bottom:12px;">Налоговый календарь · 2025</div>
+          <div class="dash-table-row header"><span>Платёж</span><span>Сумма</span><span>Срок</span><span>Режим</span><span>Статус</span></div>
+          <div class="dash-table-row"><span>Авансовый платёж Q1</span><span style="color:var(--green)">₽62k</span><span>Уплачен</span><span style="color:var(--text-muted)">УСН 6%</span><span><div class="badge-ok">✓ Готово</div></span></div>
+          <div class="dash-table-row"><span>Авансовый платёж Q2</span><span style="color:var(--amber)">₽86k</span><span>25 июля</span><span style="color:var(--text-muted)">УСН 6%</span><span><div class="badge-warn">⚠ Подготовить</div></span></div>
+          <div class="dash-table-row"><span>Страховые взносы</span><span style="color:var(--amber)">₽52k</span><span>31 дек.</span><span style="color:var(--text-muted)">ФНС</span><span><div class="badge-ok">В плане</div></span></div>
+        </div>
+      </div>
+
+      <!-- ════ TAB: НАСТРОЙКИ ════ -->
+      <div class="dash-main dash-tab" id="tab-settings" style="display:none;">
+        <div class="dash-kpi" style="grid-column:span 2;"><div class="dash-kpi-label">Подключённые кабинеты</div><div class="dash-kpi-value green">4 кабинета</div><div class="dash-kpi-change">WB × 2 · Ozon × 1 · ЯМ × 1</div></div>
+        <div class="dash-kpi" style="grid-column:span 2;"><div class="dash-kpi-label">Последняя синхронизация</div><div class="dash-kpi-value">2 мин. назад</div><div class="dash-kpi-change" style="color:var(--green);">● Всё в порядке</div></div>
+        <div class="dash-wide" style="grid-column:span 4;">
+          <div class="dash-chart-title" style="margin-bottom:14px;">Подключённые интеграции</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.2);">
+              <span style="font-size:16px;">🟣</span>
+              <div>
+                <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-main);">Wildberries · ЛК #1</div>
+                <div style="font-family:var(--font-mono);font-size:9px;color:var(--green);">● Активен · Синхр. 2 мин назад</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.2);">
+              <span style="font-size:16px;">🟣</span>
+              <div>
+                <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-main);">Wildberries · ЛК #2</div>
+                <div style="font-family:var(--font-mono);font-size:9px;color:var(--green);">● Активен · Синхр. 2 мин назад</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.2);">
+              <span style="font-size:16px;">🔵</span>
+              <div>
+                <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-main);">Ozon · ЛК #1</div>
+                <div style="font-family:var(--font-mono);font-size:9px;color:var(--green);">● Активен · Синхр. 2 мин назад</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.2);">
+              <span style="font-size:16px;">🟡</span>
+              <div>
+                <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-main);">Яндекс Маркет</div>
+                <div style="font-family:var(--font-mono);font-size:9px;color:var(--green);">● Активен · Синхр. 5 мин назад</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dash-wide" style="grid-column:span 4;">
+          <div class="dash-chart-title" style="margin-bottom:14px;">Алерты · настройки уведомлений</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(124,58,237,0.1);font-size:12px;">
+              <span style="color:var(--text-muted);">Падение маржи ниже порога</span>
+              <span style="font-family:var(--font-mono);font-size:10px;color:var(--green);background:rgba(16,185,129,0.1);padding:2px 8px;border:1px solid rgba(16,185,129,.3);">● Вкл · Telegram</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(124,58,237,0.1);font-size:12px;">
+              <span style="color:var(--text-muted);">Out-of-stock критичных SKU</span>
+              <span style="font-family:var(--font-mono);font-size:10px;color:var(--green);background:rgba(16,185,129,0.1);padding:2px 8px;border:1px solid rgba(16,185,129,.3);">● Вкл · Telegram</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(124,58,237,0.1);font-size:12px;">
+              <span style="color:var(--text-muted);">Превышение ACoS порога</span>
+              <span style="font-family:var(--font-mono);font-size:10px;color:var(--green);background:rgba(16,185,129,0.1);padding:2px 8px;border:1px solid rgba(16,185,129,.3);">● Вкл · Email</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:12px;">
+              <span style="color:var(--text-muted);">Прогноз кассового разрыва</span>
+              <span style="font-family:var(--font-mono);font-size:10px;color:var(--amber);background:rgba(245,158,11,0.1);padding:2px 8px;border:1px solid rgba(245,158,11,.3);">⚠ Вкл · Оба</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /dash-body -->
+  </div><!-- /dashboard-preview -->
+</section>
+
+<!-- ─── INVESTOR SECTION ──────────────────────────────── -->
+<section id="investors">
+  <div class="section-label">Для инвесторов</div>
+  <h2 class="section-title">ДЕНЬГИ<br><span style="color:var(--amber)">РАБОТАЮТ</span><br>ПРОЗРАЧНО</h2>
+
+  <div class="invest-grid">
+    <div class="invest-visual reveal">
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:24px;">Финансовые метрики портфеля</div>
+      <div class="gauge-container">
+        <div class="gauge-row">
+          <div class="gauge-label">
+            <span class="gauge-name">ROI (годовой)</span>
+            <span class="gauge-val">142%</span>
+          </div>
+          <div class="gauge-track">
+            <div class="gauge-fill green" style="width:71%"></div>
+          </div>
+        </div>
+        <div class="gauge-row">
+          <div class="gauge-label">
+            <span class="gauge-name">Использование капитала</span>
+            <span class="gauge-val">84%</span>
+          </div>
+          <div class="gauge-track">
+            <div class="gauge-fill" style="width:84%"></div>
+          </div>
+        </div>
+        <div class="gauge-row">
+          <div class="gauge-label">
+            <span class="gauge-name">Payback period</span>
+            <span class="gauge-val">8.4 мес</span>
+          </div>
+          <div class="gauge-track">
+            <div class="gauge-fill amber" style="width:56%"></div>
+          </div>
+        </div>
+        <div class="gauge-row">
+          <div class="gauge-label">
+            <span class="gauge-name">IRR проекта</span>
+            <span class="gauge-val">68%</span>
+          </div>
+          <div class="gauge-track">
+            <div class="gauge-fill green" style="width:68%"></div>
+          </div>
+        </div>
+        <div class="gauge-row">
+          <div class="gauge-label">
+            <span class="gauge-name">Ликвидность портфеля</span>
+            <span class="gauge-val">91%</span>
+          </div>
+          <div class="gauge-track">
+            <div class="gauge-fill green" style="width:91%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:32px;padding:20px;background:var(--bg-card);border:1px solid var(--border);">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-bottom:12px;letter-spacing:0.12em;">АВТОМАТИЧЕСКИЙ ОТЧЁТ ИНВЕСТОРУ · Q1 2025</div>
+        <div style="font-size:13px;color:var(--text-muted);line-height:1.6">
+          Выручка: <span style="color:var(--text-main);font-family:var(--font-mono)">₽12.6M</span> · 
+          Прибыль: <span style="color:var(--green);font-family:var(--font-mono)">₽4.28M</span> · 
+          Доля: <span style="color:var(--amber);font-family:var(--font-mono)">34%</span><br>
+          Начислено инвестору: <span style="color:var(--green);font-family:var(--font-mono);font-size:16px;">₽1,455,200</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="invest-features reveal">
+      <div class="invest-feature">
+        <div class="invest-icon">📊</div>
+        <div>
+          <h4>Прозрачный P&L для инвестора</h4>
+          <p>Автоматические ежемесячные отчёты с разбивкой по расходам, доходам и чистой прибыли. Инвестор видит всё — без ручных манипуляций.</p>
+        </div>
+      </div>
+      <div class="invest-feature">
+        <div class="invest-icon">🔐</div>
+        <div>
+          <h4>Защищённый доступ к данным</h4>
+          <p>Инвестор получает отдельный кабинет с правами «только чтение». Видит свою долю, начисления и динамику — но не управляет операциями.</p>
+        </div>
+      </div>
+      <div class="invest-feature">
+        <div class="invest-icon">⚖️</div>
+        <div>
+          <h4>Расчёт распределения прибыли</h4>
+          <p>Настраиваемые правила: процент от чистой прибыли, фиксированный доход или гибридная модель. Автоматический расчёт при закрытии периода.</p>
+        </div>
+      </div>
+      <div class="invest-feature">
+        <div class="invest-icon">📈</div>
+        <div>
+          <h4>Модели для привлечения капитала</h4>
+          <p>Готовые шаблоны финансовой модели для презентации инвестору: сценарии base/bull/bear, точка безубыточности, горизонты выхода.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── HOW IT WORKS ───────────────────────────────────── -->
+<section style="background:transparent;">
+  <div class="section-label">Как это работает</div>
+  <h2 class="section-title">ОТ БОТА<br>ДО <span style="color:var(--purple-400)">ЭКСПЕРТА</span><br>— 4 ШАГА</h2>
+
+  <div class="steps-grid reveal">
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-title">Открываешь бота</div>
+      <div class="step-desc">Переходишь в Telegram-бот — он задаёт несколько вопросов о твоём бизнесе и показывает первичный срез по финансовой картине.</div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-title">Видишь свою картину</div>
+      <div class="step-desc">Бот анализирует твои данные и подсвечивает ключевые проблемные зоны: маржа, кэш-флоу, реклама, склад.</div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-title">Встреча с экспертом</div>
+      <div class="step-desc">Записываешься на индивидуальную консультацию. Тебя встречает финансовый директор с высшим экономическим образованием — не менеджер по скрипту.</div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">4</div>
+      <div class="step-title">Собираем конструктор</div>
+      <div class="step-desc">Эксперт разбирает твою ситуацию и вместе с тобой настраивает модули под твой бизнес. Управляешь как гонщик — на реальных данных.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── TESTIMONIALS WALL ─────────────────────────────── -->
+<div class="testimonials" id="reviews">
+  <div style="max-width:1280px;margin:0 auto;">
+    <div class="section-label">Отзывы</div>
+    <h2 class="section-title">ГОВОРЯТ<br><span style="color:var(--purple-400)">ГОНЩИКИ</span></h2>
+
+    <!-- Stats row -->
+    <div style="display:flex;gap:40px;margin:24px 0 48px;flex-wrap:wrap;">
+      <div>
+        <div style="font-family:var(--font-display);font-size:42px;color:var(--purple-400);line-height:1;">4.9</div>
+        <div style="color:var(--amber);font-size:14px;letter-spacing:3px;">★★★★★</div>
+        <div style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono);margin-top:4px;">средняя оценка</div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-display);font-size:42px;color:var(--purple-400);line-height:1;">1 200+</div>
+        <div style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono);margin-top:22px;">активных клиентов</div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-display);font-size:42px;color:var(--purple-400);line-height:1;">₽2.4B</div>
+        <div style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono);margin-top:22px;">под управлением</div>
+      </div>
+    </div>
+
+    <!-- Masonry wall -->
+    <div class="review-wall" id="reviewWall"></div>
+
+    <!-- Show more -->
+    <div class="review-more-wrap" id="reviewMoreWrap">
+      <div class="review-more-fade"></div>
+      <button class="review-more-btn" id="reviewMoreBtn" onclick="revealMoreReviews()">
+        <span id="reviewMoreLabel">Смотреть все отзывы</span>
+        <span class="review-more-count" id="reviewMoreCount"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─── CTA ────────────────────────────────────────────── -->
+<section class="cta-section">
+  <div class="section-label" style="justify-content:center;">Консультация</div>
+  <h2 class="section-title">НЕ «ПОЗВОНИТЕ<br>НАМ» —<br><span style="color:var(--amber)">РАЗБЕРЁМ</span><br>ВАШИ ЦИФРЫ</h2>
+
+  <!-- What you get -->
+  <div style="max-width:720px;margin:0 auto 48px;display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:left;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);padding:20px 22px;border-top:2px solid var(--purple-400);">
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--purple-300);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;">На созвоне финдир открывает ваш кабинет WB/Ozon и:</div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+        <li style="display:flex;gap:10px;font-size:13px;color:var(--text-muted);align-items:flex-start;"><span style="color:var(--green);flex-shrink:0;margin-top:2px;">✓</span>Считает реальную маржу с учётом всех удержаний маркетплейса</li>
+        <li style="display:flex;gap:10px;font-size:13px;color:var(--text-muted);align-items:flex-start;"><span style="color:var(--green);flex-shrink:0;margin-top:2px;">✓</span>Находит убыточные SKU и скрытые потери на возвратах</li>
+        <li style="display:flex;gap:10px;font-size:13px;color:var(--text-muted);align-items:flex-start;"><span style="color:var(--green);flex-shrink:0;margin-top:2px;">✓</span>Проверяет кэш-флоу: когда и откуда придут деньги, где разрыв</li>
+        <li style="display:flex;gap:10px;font-size:13px;color:var(--text-muted);align-items:flex-start;"><span style="color:var(--green);flex-shrink:0;margin-top:2px;">✓</span>Оценивает рекламу: какие кампании в плюс, какие кормят конкурентов</li>
+        <li style="display:flex;gap:10px;font-size:13px;color:var(--text-muted);align-items:flex-start;"><span style="color:var(--green);flex-shrink:0;margin-top:2px;">✓</span>Показывает, какие модули конструктора нужны именно вашему бизнесу</li>
+      </ul>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);padding:20px 22px;border-top:2px solid var(--amber);">
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--amber);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;">Кто проводит консультацию</div>
+      <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;">
+        <div style="width:48px;height:48px;flex-shrink:0;background:linear-gradient(135deg,var(--purple-900),var(--purple-500));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:22px;color:#fff;border:2px solid var(--purple-400);">Э</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--text-main);">Финансовый директор</div>
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--purple-300);letter-spacing:0.08em;margin-top:3px;">ВЫСШЕЕ ЭКОНОМИЧЕСКОЕ · ОПЫТ В MP-БИЗНЕСЕ</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.6;border-top:1px solid var(--border);padding-top:14px;">
+        Не менеджер по продажам. Не ассистент по скрипту.<br>
+        Специалист, который знает <strong style="color:var(--text-main);">как устроена экономика</strong> WB и Ozon изнутри — комиссии, логистика, возвраты, штрафы, выплаты.<br><br>
+        Разговор предметный: ваши цифры, ваши SKU, ваша ситуация.
+      </div>
+    </div>
+  </div>
+
+  <!-- Steps -->
+  <div style="max-width:600px;margin:0 auto 44px;display:flex;flex-direction:column;gap:0;">
+    <div style="display:flex;gap:16px;align-items:flex-start;padding:16px 0;border-bottom:1px solid var(--border);">
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--purple-700);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;color:#fff;flex-shrink:0;">1</div>
+      <div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Пройди бота — 3 минуты</div>
+        <div style="font-size:13px;color:var(--text-muted);">Несколько вопросов о твоём бизнесе: маркетплейс, оборот, категория, главная боль. Бот покажет предварительный срез по твоей финансовой картине.</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;align-items:flex-start;padding:16px 0;border-bottom:1px solid var(--border);">
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--purple-700);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;color:#fff;flex-shrink:0;">2</div>
+      <div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Запись на 60-минутный разбор</div>
+        <div style="font-size:13px;color:var(--text-muted);">Выбираешь удобное время. Финдир заранее смотрит категорию и готовит вопросы — не начинает с нуля.</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;align-items:flex-start;padding:16px 0;">
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--purple-500);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;color:#fff;flex-shrink:0;">3</div>
+      <div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px;color:var(--text-main);">Уходишь с конкретным планом</div>
+        <div style="font-size:13px;color:var(--text-muted);">Реальные цифры по своему бизнесу, найденные потери и набор модулей под твою ситуацию. Не «подумайте и перезвоните» — а готовый следующий шаг.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-actions">
+    <a href="https://t.me/ws26adminbot?start=site2" target="_blank" class="btn-primary" style="font-size:15px;padding:20px 48px;text-decoration:none;">Записаться на разбор →</a>
+  </div>
+  <div style="margin-top:20px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">
+    Бесплатно · Без скриптов · Только конкретика по вашему бизнесу
+  </div>
+</section>
+
+<!-- ─── FOOTER ─────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="nav-logo">WILD<span>SOLUTIONS</span></div>
+      <div class="footer-desc">Система финансового контроля для селлеров и инвесторов на Wildberries, Ozon и Яндекс Маркет.</div>
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">hello@wildsolutions.ru</div>
+    </div>
+
+    <div class="footer-col">
+      <h5>Модули</h5>
+      <ul>
+        <li><a href="#constructor">Unit-экономика</a></li>
+        <li><a href="#constructor">Кэш-флоу</a></li>
+        <li><a href="#constructor">P&L Real-time</a></li>
+        <li><a href="#constructor">Контроль рекламы</a></li>
+        <li><a href="#constructor">Склад</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h5>Навигация</h5>
+      <ul>
+        <li><a href="#problems">Почему теряют деньги</a></li>
+        <li><a href="#dashboard">Демо-дашборд</a></li>
+        <li><a href="#investors">Инвесторам</a></li>
+        <li><a href="#reviews">Отзывы</a></li>
+        <li><a href="https://t.me/ws26adminbot?start=site2" target="_blank">Записаться к эксперту</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h5>Поддержка</h5>
+      <ul>
+        <li><a href="https://t.me/ws26adminbot?start=site2" target="_blank">Telegram-бот</a></li>
+        <li><a href="https://t.me/ws26adminbot?start=site2" target="_blank">Написать эксперту</a></li>
+        <li><a href="#problems">FAQ</a></li>
+        <li><a href="#" onclick="return false;" style="cursor:default;opacity:.4;">Политика конфиденциальности</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div>© 2025 WildSolutions. Все права защищены.</div>
+    <div>Не является публичной офертой.</div>
+  </div>
+</footer>
+
+<script>
+// ─── DASHBOARD TABS ──────────────────────────────────────────
+function dashTab(el, id) {
+  document.querySelectorAll('.dash-nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.dash-tab').forEach(t => { t.style.display = 'none'; t.classList.remove('active'); });
+  el.classList.add('active');
+  const tab = document.getElementById('tab-' + id);
+  if (tab) { tab.style.display = 'grid'; tab.classList.add('active'); }
+}
+
+// ─── MODULE TOGGLE ───────────────────────────────────────
+const moduleNames = {
+  'unit-eco':     'Unit-экономика',
+  'cashflow':     'Кэш-флоу',
+  'pnl':          'P&L',
+  'ads':          'Реклама',
+  'inventory':    'Склад',
+  'pricing':      'Цены',
+  'tax':          'Налоги',
+  'forecast':     'Прогноз',
+  'supplier':     'Поставщики',
+  'investor':     'Инвестор',
+  'multicabinet': 'Мультикаб',
+  'alerts':       'Алерты',
+};
+
+function toggleModule(card) {
+  card.classList.toggle('active');
+  const check = card.querySelector('.module-check');
+  check.textContent = card.classList.contains('active') ? '✓' : '';
+  updateSummary();
+}
+
+function updateSummary() {
+  const active = document.querySelectorAll('.module-card.active');
+  const count = active.length;
+  document.getElementById('moduleCount').textContent = count;
+
+  const tags = document.querySelectorAll('.summary-tag');
+  tags.forEach(t => t.classList.remove('visible'));
+
+  const modsDiv = document.getElementById('summaryModules');
+  const empty   = document.getElementById('summaryEmpty');
+
+  // Rebuild tags
+  modsDiv.innerHTML = '';
+  if (count === 0) {
+    empty.style.display = 'block';
+    modsDiv.appendChild(empty);
+    return;
+  }
+
+  active.forEach(card => {
+    const key = card.dataset.module;
+    const tag = document.createElement('span');
+    tag.className = 'summary-tag visible';
+    tag.textContent = moduleNames[key] || key;
+    modsDiv.appendChild(tag);
+  });
+}
+
+function submitConstructor() {
+  const active = document.querySelectorAll('.module-card.active');
+  if (active.length === 0) {
+    alert('Выбери хотя бы один модуль!');
+    return;
+  }
+  alert(`Отлично! Выбрано ${active.length} модулей. Менеджер свяжется с вами в ближайшие 2 часа.`);
+}
+
+// Init summary
+updateSummary();
+
+// ─── SCROLL REVEAL ───────────────────────────────────────
+const revealEls = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => entry.target.classList.add('visible'), i * 80);
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+revealEls.forEach(el => observer.observe(el));
+
+// ─── ANIMATE GAUGES ──────────────────────────────────────
+const gaugeObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('.gauge-fill').forEach(fill => {
+        const w = fill.style.width;
+        fill.style.width = '0%';
+        requestAnimationFrame(() => {
+          fill.style.transition = 'width 1.2s ease';
+          fill.style.width = w;
+        });
+      });
+    }
+  });
+}, { threshold: 0.3 });
+
+document.querySelectorAll('.invest-visual').forEach(el => gaugeObserver.observe(el));
+
+// ─── REVIEW WALL ─────────────────────────────────────────────
+(function(){
+  const BASE = [
+    // ─── SHORT ───
+    {n:'Денис Рожков',r:'Селлер WB · Автотовары · ₽7M/мес',g:'Д',c:'amber',sz:'sm',acc:'amber',
+     t:'WB списал за хранение ₽80k — я не заметил три месяца. Теперь вижу каждую строку расходов в реальном времени.'},
+    {n:'Анна Беляева',r:'Новичок · WB · ₽400k/мес',g:'А',c:'pink',sz:'sm',acc:'green',
+     t:'Зашла с оборотом ₽400k. За 2 месяца поняла, что реально зарабатываю — и это не то, что казалось в кабинете WB.'},
+    {n:'Кирилл Сомов',r:'Селлер Ozon · Посуда · ₽3.1M/мес',g:'К',c:'teal',sz:'sm',acc:'purple',
+     t:'Один звонок с финдиром дал больше пользы, чем полгода в чатах селлеров.'},
+    {n:'Полина Рогова',r:'Селлер WB · Уход за собой · ₽2.8M/мес',g:'П',c:'pink',sz:'sm',acc:'amber',
+     t:'Out-of-stock в топовой карточке — это не просто «кончился товар». Это падение позиции на 2 недели. Теперь система предупреждает за 10 дней.'},
+    {n:'Захар Мельниченко',r:'Партнёр · 2 WB-проекта',g:'З',c:'green',sz:'sm',acc:'green',
+     t:'Раньше спорили с партнёром из-за денег каждый месяц. Теперь цифры сами всё объясняют. Отношения улучшились буквально.'},
+    {n:'Руслан Галиев',r:'Селлер WB · Спортпит · ₽5.2M/мес',g:'Р',c:'red',sz:'sm',acc:'green',
+     t:'ACoS был 41% и я считал это нормой. Финдир открыл отчёт — оказалось, три кампании кормили конкурентов. Отключили. <b>Экономия ₽90k в месяц.</b>'},
+    {n:'Вера Сидорова',r:'Селлер WB · Постельное бельё',g:'В',c:'indigo',sz:'sm',acc:'purple',
+     t:'Думала: небольшой бизнес — большая система не нужна. Первая же сессия показала <b>₽35k потерь в месяц</b> на возвратах, которые я не учитывала.'},
+    {n:'Тимур Касимов',r:'Селлер WB · Аксессуары · ₽1.9M/мес',g:'Т',c:'amber',sz:'sm',acc:'amber',
+     t:'Считал себестоимость в Excel. Не учитывал упаковку, доставку до склада и процент брака. <b>Маржа оказалась в 2 раза ниже</b> расчётной.'},
+    {n:'Диана Чернова',r:'Селлер Ozon · Книги · ₽1.8M/мес',g:'Д',c:'purple',sz:'sm',acc:'green',
+     t:'В книгах маленькая маржа. Потеря 2% — это минус 30% прибыли. <b>WildSolutions считает каждый рубль.</b>'},
+    {n:'Богдан Мирный',r:'Селлер WB · Декор · ₽7.2M/мес',g:'Б',c:'blue',sz:'sm',acc:'green',
+     t:'Прогноз помог не купить лишнего перед Новым годом. <b>Ноль излишков, ноль out-of-stock</b> — впервые за 4 года работы на WB.'},
+    {n:'Артём Климов',r:'Селлер Ozon · Спортпит · ₽6.1M/мес',g:'А',c:'red',sz:'sm',acc:'amber',
+     t:'Три конкурента устроили войну цен ниже себестоимости. Я не пошёл за ними — <b>сохранил маржу</b>, пока они сами ушли с рынка через 2 месяца.'},
+    {n:'Владислав Коротков',r:'Инвестор · 2 WB-проекта',g:'В',c:'blue',sz:'sm',acc:'purple',
+     t:'Получаю автоматический PDF-отчёт первого числа каждого месяца. <b>Без звонков, без ожиданий.</b> Просто данные в 9:00.'},
+    {n:'Никита Свиридов',r:'Селлер WB+Ozon · Техника · ₽19M/мес',g:'Н',c:'green',sz:'sm',acc:'green',
+     t:'Пользовался тремя разными сервисами. Один WildSolutions закрыл всё — <b>сэкономил ₽28k/мес</b> на подписках.'},
+    {n:'Кристина Лебедь',r:'Селлер Ozon · Канцтовары · ₽2.1M/мес',g:'К',c:'indigo',sz:'sm',acc:'purple',
+     t:'Думала: небольшой бизнес — система не нужна. Финдир показал: <b>даже при ₽2M скрытые потери — ₽40k в месяц</b>. За год это ₽480k.'},
+    {n:'Иван Колесников',r:'Мультиселлер · WB+Ozon+ЯМ',g:'И',c:'purple',sz:'sm',acc:'green',
+     t:'Три маркетплейса в одном P&L. Вижу, <b>где маржа выше, и перераспределяю рекламный бюджет</b> в пользу лучшего канала каждую неделю.'},
+
+    // ─── MEDIUM ───
+    {n:'Алексей Воронов',r:'Селлер WB · Электроника · ₽8M/мес',g:'А',c:'purple',sz:'',acc:'purple',
+     t:'До WildSolutions не знал реальной маржи. Думал 28% — оказалось 14% после всех вычетов: комиссия, логистика туда-обратно, хранение, платная приёмка. За первый месяц нашли убыточные SKU и <b>сэкономили ₽340 000</b>.'},
+    {n:'Михаил Дремов',r:'Инвестор · 3 проекта WB/Ozon',g:'М',c:'green',sz:'',acc:'green',
+     t:'Вложил деньги в бизнес партнёра. Раньше получал «Excel» раз в месяц — и то если напоминал. Теперь у меня <b>личный кабинет инвестора</b> с данными напрямую из кабинетов WB без фильтра через основателя.'},
+    {n:'Екатерина Лисова',r:'Селлер Ozon · Дом и сад · ₽4.5M/мес',g:'Е',c:'amber',sz:'',acc:'amber',
+     t:'В октябре выплата от Ozon задержалась на 5 дней, а поставщик ждал оплату. Кэш-флоу показал разрыв за 2 недели до — <b>успела договориться об отсрочке</b> и не остановила закупки.'},
+    {n:'Сергей Панов',r:'Мультиселлер · WB + Ozon · ₽35M/мес',g:'С',c:'purple',sz:'',acc:'amber',
+     t:'Управляю 4 кабинетами. Раньше каждый менеджер присылал отчёт в своём формате, я тратил воскресенье на сведение. Теперь один экран, один P&L, <b>5 минут вместо полдня</b>.'},
+    {n:'Ольга Ткаченко',r:'Селлер WB · Одежда · ₽6M/мес',g:'О',c:'red',sz:'',acc:'green',
+     t:'Unit-экономика показала: 43% SKU работают в убыток из-за высокого процента возвратов в одежде и неверного расчёта логистики по габаритам. <b>Убрала убыточные позиции — маржа выросла с 11% до 29%</b> без роста выручки.'},
+    {n:'Наталья Громова',r:'Селлер Ozon · Косметика · ₽18M/мес',g:'Н',c:'indigo',sz:'',acc:'purple',
+     t:'Налоговый модуль показал: при моём обороте переход на ОСНО выгоднее если открыть второе ИП. <b>Сэкономили ₽1.2M в год</b> — и это посчитал не налоговый консультант за ₽200k, а система за 10 минут разбора.'},
+    {n:'Геннадий Крылов',r:'Селлер WB+Ozon · Питание · ₽11M/мес',g:'Г',c:'green',sz:'',acc:'green',
+     t:'Брал отсрочку у поставщика под 3% в месяц и думал — нормально. Модуль поставщиков посчитал реальную стоимость капитала: <b>54% годовых</b>. Перешёл на банковский овердрафт — дешевле вдвое.'},
+    {n:'Лариса Фомина',r:'Мультиселлер · WB + ЯМ · ₽16M/мес',g:'Л',c:'blue',sz:'',acc:'purple',
+     t:'Запустила Яндекс Маркет параллельно с WB. Мультикабинет сразу показал: <b>на ЯМ маржа по той же категории выше на 8%</b> из-за меньшей конкуренции. Перераспределила бюджет — выиграла.'},
+    {n:'Тимур Абдуллаев',r:'Селлер WB · Автотовары · ₽7M/мес',g:'Т',c:'gray',sz:'',acc:'green',
+     t:'В автотоварах конкурент снижает ночью — утром я уже теряю позиции. <b>Автопереценивание реагирует за 15 минут</b>, держит меня в топ-3 без участия и не даёт упасть ниже минимальной маржи.'},
+    {n:'Роман Белов',r:'Селлер WB · Инструменты · ₽9M/мес',g:'Р',c:'amber',sz:'',acc:'amber',
+     t:'WB штрафовал за излишки на ФФ. ABC-анализ показал: 30% ассортимента занимает 70% складских мест и даёт 8% выручки. <b>Вывели хвост — освободили ₽2.8M</b> замороженного капитала.'},
+    {n:'Константин Малов',r:'Селлер WB · Детские товары · ₽5M/мес',g:'К',c:'teal',sz:'',acc:'purple',
+     t:'Алерт об out-of-stock пришёл в пятницу в 22:00. Позвонил поставщику в субботу, сделал экспресс-поставку. <b>Не потерял позицию в выдаче</b> — а это стоит дороже, чем экспресс-доставка.'},
+    {n:'Дмитрий Касьянов',r:'Основатель · WB · ₽24M/мес',g:'Д',c:'amber',sz:'',acc:'green',
+     t:'Показал потенциальному инвестору живой дашборд прямо на встрече. Он видел маржу по SKU и прогноз на год в реальном времени. <b>Решение принял прямо в переговорке.</b> Excel такого не даёт.'},
+    {n:'Артём Зубов',r:'Инвестор · WB-проект · ₽45M АУМ',g:'А',c:'indigo',sz:'',acc:'purple',
+     t:'WildSolutions показал: выручка в отчёте партнёра отличалась от данных кабинета на <b>₽400k в месяц</b>. Стало поводом для серьёзного разговора и пересмотра договора.'},
+    {n:'Андрей Кузьмин',r:'Селлер Ozon · Электроника · ₽14M/мес',g:'А',c:'purple',sz:'',acc:'amber',
+     t:'Закупки планировал «на ощущение». Прогнозный модуль дал <b>точность 95.8% за квартал</b> — впервые не попал ни в out-of-stock, ни в затоваривание одновременно.'},
+    {n:'Марина Волкова',r:'Селлер WB · Украшения · ₽3.2M/мес',g:'М',c:'pink',sz:'',acc:'amber',
+     t:'В украшениях высокий процент возвратов — 22%. После unit-экономики с учётом каждого возврата выяснила: <b>маржа не 31%, а 9%</b>. Убрала 18 убыточных SKU — зато оставшиеся реально в плюсе.'},
+    {n:'Фёдор Захаров',r:'Селлер Ozon · Товары для офиса · ₽5.8M/мес',g:'Ф',c:'purple',sz:'',acc:'green',
+     t:'Финдир нашёл: я недозакладываю в цену эквайринг Ozon и платную упаковку. Поднял цены на 4% — потеря 2% продаж, но <b>прибыль выросла на ₽180k в месяц</b>.'},
+    {n:'Игорь Шестаков',r:'Инвестор · 5 MP-проектов · ₽80M АУМ',g:'И',c:'green',sz:'',acc:'green',
+     t:'Участвую в 5 проектах как инвестор. Каждый присылал отчёт в своём формате — я сводил вручную. Теперь один экран, сводный ROI, <b>все выплаты в одном календаре</b>.'},
+    {n:'Эдуард Лыков',r:'Селлер WB · Стройматериалы · ₽20M/мес',g:'Э',c:'indigo',sz:'',acc:'purple',
+     t:'WB компенсировал мне потери товара по заниженной стоимости — я их не оспаривал, потому что не знал как считать. <b>За 2 года недополучил ₽380k.</b> Помогли подать претензии.'},
+    {n:'Руслан Мещеряков',r:'Селлер WB · Мебель · ₽14M/мес',g:'Р',c:'amber',sz:'',acc:'purple',
+     t:'В мебели каждый возврат — убыток. Модуль считает реальную стоимость возврата по каждой SKU с учётом обратной логистики и переупаковки. <b>Впервые понял, какие позиции на самом деле убыточны.</b>'},
+    {n:'Надежда Кулакова',r:'Селлер WB · Бижутерия · ₽2.6M/мес',g:'Н',c:'pink',sz:'',acc:'green',
+     t:'Первая консультация: 38 из 90 SKU работали в минус из-за возвратов и высокой конкуренции по цене. <b>Убрала убыточный хвост — маржа выросла с 8% до 24%</b> при меньшем ассортименте.'},
+    {n:'Жанна Миронова',r:'Селлер WB · БАДы · ₽4.3M/мес',g:'Ж',c:'teal',sz:'',acc:'green',
+     t:'Бухгалтер на аутсорсе стоил ₽30k и присылал отчёты раз в месяц. <b>WildSolutions даёт данные ежедневно и стоит дешевле.</b> Бухгалтера оставила только для налоговой отчётности.'},
+    {n:'Евгений Соколов',r:'Селлер WB · Гаджеты · ₽25M/мес',g:'Е',c:'indigo',sz:'',acc:'purple',
+     t:'Более 200 конкурентов в нише. Ценовой движок делает 1400 проверок в день. <b>Я всегда в топ-5 по цене без ручного мониторинга</b> — и не опускаюсь ниже минимальной маржи.'},
+    {n:'Валентина Черных',r:'Селлер WB+Ozon · Игрушки · ₽9.2M/мес',g:'В',c:'amber',sz:'',acc:'amber',
+     t:'Игрушки — 40% годового оборота в ноябре-декабре. <b>Прогноз помог правильно рассчитать закупку</b>: не завезла лишнего в январе и не ушла в out-of-stock в декабре. Впервые за 3 года оба условия одновременно.'},
+    {n:'Павел Исаев',r:'Со-инвестор · 2 проекта · ₽28M АУМ',g:'П',c:'blue',sz:'',acc:'purple',
+     t:'С обоими основателями были споры о цифрах — каждый считал прибыль по-своему. После подключения системы <b>все считают по одному стандарту</b>, споров нет, выплаты приходят без скандалов.'},
+    {n:'Ирина Соболева',r:'Бухгалтер · обслуживает 8 селлеров',g:'И',c:'green',sz:'',acc:'green',
+     t:'Веду бухгалтерию для 8 клиентов-селлеров. <b>Данные сходятся с официальной отчётностью до копейки</b>, и мне не нужно каждый раз просить выгрузки из кабинетов. Экономлю 6-8 часов в неделю.'},
+    {n:'Владимир Ершов',r:'Селлер WB · Новая ниша · ₽2.1M/мес',g:'В',c:'red',sz:'',acc:'amber',
+     t:'Запускал новую категорию. Финдир построил модель прямо на консультации: минимальный оборот, срок выхода в плюс по трём сценариям. <b>Запустился с пониманием рисков</b>, а не вслепую.'},
+    {n:'Захар Фёдоров',r:'Основатель · WB · ₽30M/мес',g:'З',c:'blue',sz:'',acc:'amber',
+     t:'Привлёк стратегического партнёра с помощью финансовой модели. Он задал вопрос про IRR — я открыл дашборд прямо на встрече. <b>Переговоры заняли 2 встречи</b> вместо обычных 4 месяцев.'},
+
+    // ─── LONG ───
+    {n:'Зоя Семёнова',r:'Управляющий фондом · 8 проектов · ₽200M АУМ',g:'З',c:'amber',sz:'lg',acc:'amber',
+     t:'Управляю фондом с долями в 8 MP-бизнесах. До WildSolutions каждый основатель присылал отчёт в своём формате — я тратила неделю в конце квартала на сведение. Теперь единый дашборд: <b>сводный ROI портфеля, выплаты, прогнозы, динамика по каждому проекту</b>. То, что раньше делала команда из 3 аналитиков — теперь автоматически каждый день.'},
+    {n:'Карина Мельник',r:'Операционный директор · WB · ₽60M/мес',g:'К',c:'purple',sz:'lg',acc:'purple',
+     t:'Когда оборот вырос до ₽60M, ручное управление сломалось. 6 менеджеров в своих таблицах, решения принимались по ощущениям. WildSolutions дало нам <b>единый язык цифр</b>: у каждого менеджера свои KPI в системе, я вижу выполнение в реальном времени. Первый квартал после внедрения — <b>рост маржи на 6 п.п. без роста выручки</b>.'},
+    {n:'Олег Назаров',r:'Мультиселлер · 4 ниши · ₽42M/мес',g:'О',c:'indigo',sz:'lg',acc:'purple',
+     t:'Работаю в 4 нишах параллельно: электроника, спорт, кухня, детские. Раньше каждый бизнес в своей таблице, воскресенье уходило на сведение P&L. Теперь вижу, какая ниша растёт, а какая тянет вниз. <b>Освободилось 150+ часов в год</b> — и это не главное. Главное — решения стали быстрее и точнее.'},
+    {n:'Виктор Логинов',r:'Инвестор + Селлер · WB · ₽90M АУМ',g:'В',c:'blue',sz:'lg',acc:'green',
+     t:'Я и сам селлер, и инвестирую в чужие проекты. WildSolutions закрывает обе роли: для своего бизнеса — операционный контроль, для инвестиций — прозрачные отчёты без ручного труда. <b>Это как иметь двух финансовых директоров за цену одной подписки.</b> Внедрил в 6 из 7 своих проектов — седьмой отказался, я вышел из него.'},
+    {n:'Светлана Кириллова',r:'Основатель · WB · Косметика · ₽6.8M/мес',g:'С',c:'purple',sz:'lg',acc:'amber',
+     t:'Консультация с финансовым директором длилась полтора часа. Это не скрипт продаж — он открыл мой кабинет WB и начал реальный разбор. Нашёл три вещи: неправильный расчёт себестоимости, кампании с ACoS выше 40% и зависшие остатки на ₽600k. <b>К концу встречи был план действий на 3 месяца.</b> Это стоило больше, чем я ожидала.'},
+    {n:'Николай Громов',r:'Основатель · WB+Ozon · ₽28M/мес',g:'Н',c:'green',sz:'lg',acc:'green',
+     t:'Работаю 4 года на маркетплейсах, думал что знаю всё. Финдир за 20 минут нашёл то, чего я не видел годами: <b>WB компенсировал потери товара по заниженной стоимости</b>, и я их не оспаривал 2 года. Помогли подать претензии — вернули ₽380k. Это реальные деньги, которые я просто не брал.'},
+    {n:'Алина Семёнова',r:'Селлер WB · Текстиль · ₽8.6M/мес',g:'А',c:'pink',sz:'lg',acc:'amber',
+     t:'Сезонность в текстиле — боль: летом товар лежит, зимой не хватает. Раньше закупала «на глаз». Прогнозная модель учитывает сезонность, тренды выдачи и остатки конкурентов. <b>Первый сезон с системой: ноль out-of-stock в пик и ноль переплаты за хранение в межсезонье.</b> Впервые за 3 года работы на WB.'},
+    {n:'Борис Крымов',r:'Инвестор-ангел · 6 MP-проектов',g:'Б',c:'green',sz:'lg',acc:'green',
+     t:'Инвестирую в MP-проекты 3 года. Потерял деньги в двух из первых четырёх — основатели не умели считать реальную экономику, а я не мог проверить. Теперь WildSolutions — обязательное условие для входа. <b>Нет системы — нет инвестиций.</b> Последние 4 проекта все прибыльные.'},
+    {n:'Григорий Масленников',r:'Инвестор · 4 проекта · ₽120M АУМ',g:'Г',c:'purple',sz:'lg',acc:'purple',
+     t:'Нанял финансового аналитика за ₽150k в месяц — он всё равно зависел от данных, которые присылают основатели. WildSolutions даёт данные напрямую из источников. <b>Точность выросла, аналитик теперь занимается стратегией</b>, а не сбором цифр. Правильное распределение труда.'},
+    {n:'Татьяна Воробьёва',r:'CFO · 3 WB-компании группы',g:'Т',c:'green',sz:'lg',acc:'green',
+     t:'Работаю CFO в группе из 3 компаний. Оцениваю инструменты профессионально — до этого пробовала 6 систем. WildSolutions единственная, где P&L корректно учитывает все удержания WB включая агентский НДС, кэш-флоу детализирован до уровня отдельных выплат, <b>а налоговый блок правильно считает базу при УСН с учётом момента оплаты</b>. Это не маркетинг — это реально работает.'},
+    {n:'Юлия Орлова',r:'Селлер Ozon · Одежда · ₽9.4M/мес',g:'Ю',c:'amber',sz:'lg',acc:'amber',
+     t:'Финансовый директор провёл разбор за 40 минут. Три вещи, которых я не видела: возвраты в одежде увеличивают логистические расходы в 2.4 раза, я не закладываю утилизацию брака, и реклама на Ozon приносит ROAS 0.8x на 4 из 7 кампаний. <b>Сэкономила ₽180k в первый месяц</b> просто отключив убыточные кампании и пересчитав цены.'},
+    {n:'Антон Белоусов',r:'Инвестор · 7 проектов · ₽180M АУМ',g:'А',c:'purple',sz:'lg',acc:'purple',
+     t:'Инвестирую в MP-проекты как венчурный инвестор с портфельным подходом. До WildSolutions проводил due diligence вручную: запрашивал выгрузки, Excel, акты. Теперь даю доступ к системе — вижу данные сам, без фильтра основателя. <b>Два проекта из последних семи не прошли проверку системой.</b> Я в них не зашёл. Оба потом закрылись.'},
+    {n:'Виктория Соловьёва',r:'Основатель бренда · WB · ₽22M/мес',g:'В',c:'purple',sz:'lg',acc:'green',
+     t:'Инвестор попросил финансовую модель. Финдир помог собрать сценарии base/bull/bear, посчитать IRR и payback period с учётом реальной маржи WB, а не расчётной. <b>Привлекли ₽15M за 2 недели</b> — инвестор сказал, что впервые видел такую прозрачную презентацию от MP-бизнеса.'},
+  ];
+
+  // All reviews above — no separate EXTRA needed
+  const EXTRA = [];
+  const GDIENTS = {
+    purple: 'linear-gradient(135deg,#3B1A8C,#7C3AED)',
+    green:  'linear-gradient(135deg,#065F46,#10B981)',
+    amber:  'linear-gradient(135deg,#78350F,#F59E0B)',
+    blue:   'linear-gradient(135deg,#1E3A8A,#60A5FA)',
+    red:    'linear-gradient(135deg,#7F1D1D,#EF4444)',
+    indigo: 'linear-gradient(135deg,#312E81,#6366F1)',
+    teal:   'linear-gradient(135deg,#134E4A,#14B8A6)',
+    pink:   'linear-gradient(135deg,#831843,#EC4899)',
+    gray:   'linear-gradient(135deg,#1C1917,#78716C)',
+  };
+
+  // Build full list: base 30 + extra 20, then repeat-shuffle to 200
+  const seed = [...BASE, ...EXTRA];
+  const ALL = [];
+  while (ALL.length < 200) {
+    seed.forEach(r => { if (ALL.length < 200) ALL.push(r); });
+  }
+
+  const wall = document.getElementById('reviewWall');
+  const wrap = document.getElementById('reviewMoreWrap');
+  const btn  = document.getElementById('reviewMoreBtn');
+  const lbl  = document.getElementById('reviewMoreLabel');
+  const cnt  = document.getElementById('reviewMoreCount');
+  if (!wall) return;
+
+  function makeCard(r, i) {
+    const div = document.createElement('div');
+    div.className = 'test-card' + (r.sz ? ' sz-'+r.sz : '') + (r.acc ? ' accent-'+r.acc : '');
+    if (i >= 12) div.classList.add('review-hidden');
+    div.innerHTML =
+      '<div class="test-rating">★★★★★</div>' +
+      '<p class="test-text">' + r.t + '</p>' +
+      '<div class="test-author">' +
+        '<div class="test-avatar" style="background:' + (GDIENTS[r.c]||GDIENTS.purple) + ';">' + r.g + '</div>' +
+        '<div><div class="test-name">' + r.n + '</div><div class="test-role">' + r.r + '</div></div>' +
+      '</div>';
+    return div;
+  }
+
+  // Render all cards
+  ALL.forEach((r, i) => wall.appendChild(makeCard(r, i)));
+
+  // Apply collapsed state
+  wall.classList.add('collapsed');
+  const hidden = ALL.length - 12;
+  cnt.textContent = '+' + hidden + ' отзывов';
+
+  window.revealMoreReviews = function() {
+    wall.classList.remove('collapsed');
+    wrap.classList.add('expanded');
+  };
+})();
+
+// ─── CAROUSEL (DISABLED — replaced by wall) ─────────────────
+// ─── TICKER LIVE UPDATE ──────────────────────────────────────
+(function() {
+  const VISIBLE = 3;
+  const GAP     = 24;
+  const AUTO_MS = 4800;
+
+  const track    = document.getElementById('carTrack');
+  const viewport = document.getElementById('carViewport');
+  const dotsWrap = document.getElementById('carDots');
+  if (!track) return;
+
+  const slides = Array.from(track.querySelectorAll('.car-slide'));
+  const total  = slides.length;
+  let current  = 0;
+  let autoTimer;
+  let dragStartX = 0;
+  let dragging   = false;
+
+  const pages = Math.ceil(total / VISIBLE);
+  for (let i = 0; i < pages; i++) {
+    const d = document.createElement('button');
+    d.className = 'car-dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => { goTo(i * VISIBLE); restartAuto(); });
+    dotsWrap.appendChild(d);
+  }
+
+  function isMobile() { return window.innerWidth <= 900; }
+
+  function getSlideW() {
+    const s = slides[0];
+    if (!s) return 0;
+    return s.getBoundingClientRect().width + GAP;
+  }
+
+  function maxIndex() { return isMobile() ? total - 1 : total - VISIBLE; }
+
+  function goTo(idx) {
+    current = Math.max(0, Math.min(idx, maxIndex()));
+    track.style.transform = 'translateX(-' + (current * getSlideW()) + 'px)';
+    const perPage = isMobile() ? 1 : VISIBLE;
+    const page = Math.round(current / perPage);
+    dotsWrap.querySelectorAll('.car-dot').forEach(function(d, i) { d.classList.toggle('active', i === page); });
+  }
+
+  window.carMove = function(dir) {
+    const step = isMobile() ? 1 : VISIBLE;
+    let next = current + dir * step;
+    if (next > maxIndex()) next = 0;
+    if (next < 0) next = maxIndex();
+    goTo(next);
+    restartAuto();
+  };
+
+  function restartAuto() {
+    clearInterval(autoTimer);
+    autoTimer = setInterval(function() {
+      const step = isMobile() ? 1 : VISIBLE;
+      goTo(current + step > maxIndex() ? 0 : current + step);
+    }, AUTO_MS);
+  }
+
+  viewport.addEventListener('mousedown', function(e) {
+    dragging = true; dragStartX = e.clientX;
+    viewport.classList.add('dragging');
+    track.style.transition = 'none';
+  });
+  window.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    track.style.transform = 'translateX(calc(-' + (current * getSlideW()) + 'px + ' + (e.clientX - dragStartX) + 'px))';
+  });
+  window.addEventListener('mouseup', function(e) {
+    if (!dragging) return;
+    dragging = false; viewport.classList.remove('dragging');
+    track.style.transition = '';
+    const diff = e.clientX - dragStartX;
+    const step = isMobile() ? 1 : VISIBLE;
+    if (diff < -60) goTo(current + step);
+    else if (diff > 60) goTo(current - step);
+    else goTo(current);
+    restartAuto();
+  });
+  viewport.addEventListener('touchstart', function(e) { dragStartX = e.touches[0].clientX; }, {passive:true});
+  viewport.addEventListener('touchend', function(e) {
+    const diff = e.changedTouches[0].clientX - dragStartX;
+    const step = isMobile() ? 1 : VISIBLE;
+    if (diff < -50) goTo(current + step);
+    else if (diff > 50) goTo(current - step);
+    restartAuto();
+  }, {passive:true});
+
+  window.addEventListener('resize', function() { goTo(current); });
+  goTo(0);
+  restartAuto();
+})();
+
+// ─── TICKER LIVE UPDATE ──────────────────────────────────
+function randomFlicker() {
+  const items = document.querySelectorAll('.ticker-item .val, .ticker-item .neg');
+  const el = items[Math.floor(Math.random() * items.length)];
+  if (!el) return;
+  el.style.opacity = '0.4';
+  setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '1'; }, 200);
+}
+setInterval(randomFlicker, 2500);
+</script>
+</body>
+</html>
